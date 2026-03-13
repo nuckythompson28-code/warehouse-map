@@ -2562,7 +2562,7 @@ sheet.addEventListener('touchmove',e=>{
 /* ── 전체뷰 렌더링 ── */
 // 그룹 정의
 const WH_GROUPS=[
-  {id:'AJ', label:'A ~ J', secs:['A','B','C','D','E','F','G','H','I','J'], extra:['V','W','AA','BB'], color:'#d97706',
+  {id:'AJ', label:'A ~ J', secs:['A','B','C','D','E','F','G','H','I','J'], extra:['V','AA','W','BB'], color:'#d97706',
    aisles:[[['A'],'통로 1',['B','C'],'통로 2',['D','E'],'통로 3',['F','G'],'통로 4',['H','I'],'통로 5',['J']]]},
   {id:'KP', label:'K ~ P', secs:['K','L','M','N','O','P'], extra:['X','Y'], color:'#059669',
    aisles:[[['K'],'통로 6',['L','M'],'통로 7',['N','O'],'통로 8',['P']]]},
@@ -2636,20 +2636,45 @@ function renderFullDetail(groupId, wrap){
   title.textContent=g.label;
   detail.appendChild(title);
 
+  // 부속 섹션이 있으면 좌우 레이아웃
+  const layout=document.createElement('div');
+  layout.style.cssText='display:flex;gap:10px;align-items:flex-start';
+
+  // 부속 섹션 (왼쪽)
+  if(g.extra.length){
+    const extraCol=document.createElement('div');
+    extraCol.style.cssText='display:flex;flex-direction:column;gap:6px;flex-shrink:0;min-width:60px';
+    const extraHd=document.createElement('div');
+    extraHd.style.cssText='font-family:IBM Plex Mono;font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding-bottom:4px';
+    extraHd.textContent='부속';
+    extraCol.appendChild(extraHd);
+    g.extra.forEach(sec=>{
+      if(secSet.has(sec)){
+        extraCol.appendChild(makeSecBlockFull(sec));
+      } else {
+        const ph=document.createElement('div');
+        ph.className='wh-placeholder';
+        ph.style.minHeight='60px';
+        ph.innerHTML=`<span>${sec}</span>`;
+        extraCol.appendChild(ph);
+      }
+    });
+    layout.appendChild(extraCol);
+  }
+
+  // 메인 섹션 (오른쪽)
   const sections=document.createElement('div');
   sections.className='wh-detail-sections';
+  sections.style.flex='1';
 
-  // 통로 구조에 맞게 렌더
   g.aisles.forEach((block,bi)=>{
     block.forEach(item=>{
       if(typeof item==='string'){
-        // 통로 라벨
         const aisle=document.createElement('div');
         aisle.className='wh-detail-aisle';
         aisle.textContent=item;
         sections.appendChild(aisle);
       } else {
-        // 섹션 배열
         item.forEach(sec=>{
           if(secSet.has(sec)){
             sections.appendChild(makeSecBlockFull(sec));
@@ -2664,25 +2689,8 @@ function renderFullDetail(groupId, wrap){
     });
   });
 
-  // extra 섹션 (V,W,AA,BB,X,Y 등)
-  if(g.extra.length){
-    const extraHd=document.createElement('div');
-    extraHd.className='wh-detail-aisle';
-    extraHd.textContent='부속 섹션';
-    sections.appendChild(extraHd);
-    g.extra.forEach(sec=>{
-      if(secSet.has(sec)){
-        sections.appendChild(makeSecBlockFull(sec));
-      } else {
-        const ph=document.createElement('div');
-        ph.className='wh-placeholder';
-        ph.innerHTML=`<span>섹션 ${sec}</span>`;
-        sections.appendChild(ph);
-      }
-    });
-  }
-
-  detail.appendChild(sections);
+  layout.appendChild(sections);
+  detail.appendChild(layout);
   wrap.appendChild(detail);
 }
 
