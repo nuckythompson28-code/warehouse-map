@@ -742,6 +742,28 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 </head>
 <body>
 
+<!-- 비밀번호 잠금 화면 -->
+<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f3f0;z-index:9999;display:flex;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:30px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1);width:320px;">
+    <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+    <div style="font-family:'IBM Plex Mono';font-size:18px;font-weight:700;color:#d97706;margin-bottom:20px;">창고 맵</div>
+    <input id="pwInput" type="password" placeholder="비밀번호 입력" style="width:100%;padding:12px;border:1px solid #e5e0d8;border-radius:10px;font-size:15px;outline:none;text-align:center;margin-bottom:12px;" onkeydown="if(event.key==='Enter')checkPw()">
+    <button onclick="checkPw()" style="width:100%;padding:12px;background:#d97706;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">입장</button>
+    <div id="pwError" style="color:#ef4444;font-size:13px;margin-top:10px;display:none;">비밀번호가 틀렸습니다</div>
+  </div>
+</div>
+<script>
+function checkPw(){
+  if(document.getElementById('pwInput').value==='soltri2323'){
+    document.getElementById('lockScreen').style.display='none';
+  }else{
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+</script>
+
 <!-- 상단 -->
 <div class="topbar">
   <div class="topbar-row1">
