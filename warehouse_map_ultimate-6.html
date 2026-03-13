@@ -3536,11 +3536,17 @@ loadFromSheet(); // 백그라운드에서 서버 최신 데이터 가져오기
   });
   viewport.style.cursor='grab';
 
-  // 마우스 휠 (데스크탑) → 스크롤 이동
+  // 마우스 휠 (데스크탑) → 확대/축소
   viewport.addEventListener('wheel', e=>{
     e.preventDefault();
-    originX -= e.deltaX || 0;
-    originY -= e.deltaY || 0;
+    const rect=viewport.getBoundingClientRect();
+    const focalX=e.clientX-rect.left;
+    const focalY=e.clientY-rect.top;
+    const delta=e.deltaY>0?0.9:1.1;
+    const newScale=Math.max(minScale, Math.min(maxScale, scale*delta));
+    originX=focalX-(focalX-originX)*(newScale/scale);
+    originY=focalY-(focalY-originY)*(newScale/scale);
+    scale=newScale;
     clampOrigin();
     applyTransform();
   },{passive:false});
