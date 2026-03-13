@@ -162,36 +162,52 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 #panel-full{overflow:hidden;position:relative;}
 .full-warehouse{padding:12px;min-width:max-content;}
 
-/* 창고 그리드 레이아웃 */
-.wh-grid{
-  display:grid;
-  grid-template-columns:
-    minmax(50px,auto) /* 1: Q/R/S/T/U */
-    8px               /* 2: gap */
-    minmax(50px,auto) /* 3: V/W/X */
-    minmax(40px,auto) /* 4: AA/BB/Y */
-    12px              /* 5: gap */
-    1fr;              /* 6: main racks */
-  grid-template-rows:repeat(24,auto);
-  gap:4px 0;
-  align-items:stretch;
+/* 그룹 카드 개요 */
+.wh-groups{display:flex;flex-direction:column;gap:12px;padding:16px;}
+.wh-group-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:20px 24px;cursor:pointer;transition:all .15s;
+  box-shadow:var(--shadow);
 }
-.wh-aisle{
+.wh-group-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.wh-group-card:active{transform:scale(.98)}
+.wh-group-hd{
+  font-family:'IBM Plex Mono';font-size:18px;font-weight:800;color:var(--text);
+  margin-bottom:8px;display:flex;align-items:center;gap:10px;
+}
+.wh-group-hd .arrow{color:var(--muted);font-size:14px;margin-left:auto}
+.wh-group-stats{display:flex;gap:12px;flex-wrap:wrap}
+.wh-group-stat{
+  font-family:'IBM Plex Mono';font-size:12px;font-weight:600;
+  padding:4px 10px;border-radius:8px;
+}
+.wh-group-bar{
+  margin-top:12px;height:6px;border-radius:3px;background:#e5e0d8;overflow:hidden;
+  display:flex;
+}
+.wh-group-bar span{height:100%;transition:width .3s}
+
+/* 그룹 상세뷰 */
+.wh-detail{padding:12px;}
+.wh-detail-back{
+  font-family:'IBM Plex Mono';font-size:13px;font-weight:700;
+  color:var(--accent);cursor:pointer;padding:8px 14px;
+  border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;
+  box-shadow:var(--shadow);
+}
+.wh-detail-back:hover{background:var(--surface2)}
+.wh-detail-sections{display:flex;flex-direction:column;gap:6px;}
+.wh-detail-aisle{
   font-family:'IBM Plex Mono';font-size:10px;font-weight:700;color:var(--muted);
   display:flex;align-items:center;gap:8px;padding:4px 0;
-  letter-spacing:.5px;
 }
-.wh-aisle::before,.wh-aisle::after{content:"";flex:1;height:1px;background:var(--border)}
+.wh-detail-aisle::before,.wh-detail-aisle::after{content:"";flex:1;height:1px;background:var(--border)}
 .wh-placeholder{
   background:#fff;border:2px dashed #d5cfc6;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
   min-height:40px;padding:8px 4px;
   font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:#b0a89e;
-  writing-mode:horizontal-tb;
-}
-.wh-placeholder.vertical{
-  writing-mode:vertical-rl;text-orientation:mixed;
-  min-width:36px;padding:12px 4px;
 }
 .full-pair{display:flex;flex-direction:column;gap:3px}
 .full-section{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 8px;box-shadow:var(--shadow)}
@@ -672,10 +688,12 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   .full-sec-hd { font-size: 11px!important; }
   .full-floor-lbl { font-size: 9px!important; min-width: 20px!important; }
   
-  /* 통로 레이블 */
-  .wh-aisle { font-size: 9px!important; padding: 3px 0!important; }
-  .wh-grid { gap: 3px 0!important; }
-  .wh-placeholder { font-size: 11px!important; min-width: 36px!important; }
+  /* 그룹 카드 모바일 */
+  .wh-groups { padding: 10px!important; gap: 10px!important; }
+  .wh-group-card { padding: 14px 16px!important; }
+  .wh-group-hd { font-size: 15px!important; }
+  .wh-detail { padding: 8px!important; }
+  .wh-placeholder { font-size: 11px!important; }
   
   /* 테이블 뷰 */
   .wh-table-wrap { padding: 0 4px 80px; }
@@ -2534,137 +2552,186 @@ sheet.addEventListener('touchmove',e=>{
 
 
 /* ── 전체뷰 렌더링 ── */
+// 그룹 정의
+const WH_GROUPS=[
+  {id:'AJ', label:'A ~ J', secs:['A','B','C','D','E','F','G','H','I','J'], extra:['V','W','AA','BB'], color:'#d97706',
+   aisles:[[['A'],'통로 1',['B','C'],'통로 2',['D','E'],'통로 3',['F','G'],'통로 4',['H','I'],'통로 5',['J']]]},
+  {id:'KP', label:'K ~ P', secs:['K','L','M','N','O','P'], extra:['X','Y'], color:'#059669',
+   aisles:[[['K'],'통로 6',['L','M'],'통로 7',['N','O'],'통로 8',['P']]]},
+  {id:'QU', label:'Q ~ U', secs:['Q','R','S','T','U'], extra:[], color:'#6366f1',
+   aisles:[[['Q','R','S','T','U']]]}
+];
+let fullViewGroup=null;
+
 function renderFullView(){
   const wrap=document.getElementById('fullWarehouse');
   wrap.innerHTML='';
-  const sections=[...new Set(data.map(d=>d.section))].sort();
-  const secSet=new Set(sections);
+  if(fullViewGroup) return renderFullDetail(fullViewGroup, wrap);
+  renderFullOverview(wrap);
+}
 
-  function makeSecBlock(sec){
-    const even=isEven(sec);
-    const sd=data.filter(d=>d.section===sec);
-    const floors=[...new Set(sd.map(d=>d.floor))].sort((a,b)=>b-a);
-    const act=sd.filter(d=>getSlotState(d)==='IN').length;
-    const hld=sd.filter(d=>getSlotState(d)==='EMPTY').length;
+function renderFullOverview(wrap){
+  const container=document.createElement('div');
+  container.className='wh-groups';
 
-    const secDiv=document.createElement('div');
-    secDiv.className='full-section';
+  WH_GROUPS.forEach(g=>{
+    const allSecs=[...g.secs,...g.extra];
+    const gd=data.filter(d=>allSecs.includes(d.section));
+    const total=gd.length;
+    const inUse=gd.filter(d=>getSlotState(d)==='IN').length;
+    const hold=gd.filter(d=>getSlotState(d)==='EMPTY').length;
+    const empty=total-inUse-hold;
+    const pctIn=total?Math.round(inUse/total*100):0;
+    const pctHold=total?Math.round(hold/total*100):0;
 
-    const hd=document.createElement('div');
-    hd.className='full-sec-hd';
-    hd.innerHTML=`섹션 ${sec}
-      <span style="background:rgba(5,150,105,.12);color:#065f46;padding:1px 6px;border-radius:6px;font-size:9px">✅ ${act}</span>
-      ${hld?`<span style="background:rgba(217,119,6,.12);color:#92400e;padding:1px 6px;border-radius:6px;font-size:9px">⏸ ${hld}</span>`:''}`;
-    secDiv.appendChild(hd);
+    const card=document.createElement('div');
+    card.className='wh-group-card';
+    card.innerHTML=`
+      <div class="wh-group-hd">
+        <span style="color:${g.color}">${g.label}</span>
+        <span style="font-size:12px;color:var(--muted);font-weight:500">${g.secs.join(', ')}</span>
+        <span class="arrow">&#9654;</span>
+      </div>
+      <div class="wh-group-stats">
+        <span class="wh-group-stat" style="background:rgba(5,150,105,.1);color:#065f46">사용 ${inUse}</span>
+        <span class="wh-group-stat" style="background:rgba(217,119,6,.1);color:#92400e">대기 ${hold}</span>
+        <span class="wh-group-stat" style="background:rgba(0,0,0,.05);color:var(--muted)">빈칸 ${empty}</span>
+        <span class="wh-group-stat" style="background:rgba(0,0,0,.03);color:var(--muted)">전체 ${total}</span>
+      </div>
+      <div class="wh-group-bar">
+        <span style="width:${pctIn}%;background:#10b981"></span>
+        <span style="width:${pctHold}%;background:#d97706"></span>
+      </div>
+    `;
+    card.addEventListener('click',()=>{fullViewGroup=g.id;renderFullView();});
+    container.appendChild(card);
+  });
+  wrap.appendChild(container);
+}
 
-    floors.forEach(floor=>{
-      const fd=sd.filter(d=>d.floor===floor).sort((a,b)=>a.order-b.order);
-      const floorRow=document.createElement('div');
-      floorRow.className='full-floor-row';
-      const lbl=document.createElement('div');
-      lbl.className='full-floor-lbl';
-      lbl.textContent=floor+'F';
-      floorRow.appendChild(lbl);
-      const slotsWrap=document.createElement('div');
-      slotsWrap.className='full-slots'+(even?' mirrored':'');
-      const isGroupType=t=>t==='흰색'||t==='노란색'||t==='서랍';
-      let i=0;
-      while(i<fd.length){
-        const d=fd[i];
-        if(isGroupType(d.type)){
-          const group=[];let j=i;
-          while(j<fd.length&&fd[j].type===d.type&&group.length<4){group.push(fd[j]);j++;}
-          const isDrawer=d.type==='서랍';
-          const cellW=isDrawer?80:54;
-          const zg=document.createElement('div');
-          zg.className='zgroup'+(isDrawer?' drawers':'');
-          let arranged;
-          if(even){arranged=[group[1]||null,group[0]||null,group[3]||null,group[2]||null];}
-          else{arranged=[group[0]||null,group[1]||null,group[2]||null,group[3]||null];}
-          arranged.forEach(gd=>{
-            if(gd){zg.appendChild(makeSlotEl(gd));}
-            else{const em=document.createElement('div');em.style.cssText=`width:${cellW}px;height:48px;`;zg.appendChild(em);}
-          });
-          slotsWrap.appendChild(zg);i=j;
-        }else{
-          slotsWrap.appendChild(makeSlotEl(d));i++;
-        }
+function renderFullDetail(groupId, wrap){
+  const g=WH_GROUPS.find(x=>x.id===groupId);
+  if(!g){fullViewGroup=null;return renderFullOverview(wrap);}
+  const secSet=new Set(data.map(d=>d.section));
+
+  const detail=document.createElement('div');
+  detail.className='wh-detail';
+
+  const back=document.createElement('button');
+  back.className='wh-detail-back';
+  back.innerHTML='&#9664; 전체 보기';
+  back.addEventListener('click',()=>{fullViewGroup=null;renderFullView();});
+  detail.appendChild(back);
+
+  const title=document.createElement('div');
+  title.style.cssText='font-family:IBM Plex Mono;font-size:16px;font-weight:800;color:'+g.color+';margin-bottom:12px';
+  title.textContent=g.label;
+  detail.appendChild(title);
+
+  const sections=document.createElement('div');
+  sections.className='wh-detail-sections';
+
+  // 통로 구조에 맞게 렌더
+  g.aisles.forEach((block,bi)=>{
+    block.forEach(item=>{
+      if(typeof item==='string'){
+        // 통로 라벨
+        const aisle=document.createElement('div');
+        aisle.className='wh-detail-aisle';
+        aisle.textContent=item;
+        sections.appendChild(aisle);
+      } else {
+        // 섹션 배열
+        item.forEach(sec=>{
+          if(secSet.has(sec)){
+            sections.appendChild(makeSecBlockFull(sec));
+          } else {
+            const ph=document.createElement('div');
+            ph.className='wh-placeholder';
+            ph.innerHTML=`<span>섹션 ${sec}</span>`;
+            sections.appendChild(ph);
+          }
+        });
       }
-      floorRow.appendChild(slotsWrap);
-      secDiv.appendChild(floorRow);
     });
-    return secDiv;
-  }
-
-  function makePlaceholder(name, vertical){
-    const div=document.createElement('div');
-    div.className='wh-placeholder'+(vertical?' vertical':'');
-    div.innerHTML=`<span>${name}</span>`;
-    return div;
-  }
-
-  function placeEl(el, col, rowStart, rowEnd){
-    el.style.gridColumn=String(col);
-    el.style.gridRow=rowStart+(rowEnd?(' / '+(rowEnd+1)):'');
-  }
-
-  // ── 그리드 컨테이너 ──
-  const grid=document.createElement('div');
-  grid.className='wh-grid';
-
-  // 행 매핑: 섹션 → 그리드 row 번호
-  // A(1) aisle(2) B(3) C(4) aisle(5) D(6) E(7) aisle(8)
-  // F(9) G(10) aisle(11) H(12) I(13) aisle(14)
-  // J(15) K(16) aisle(17) L(18) M(19) aisle(20)
-  // N(21) O(22) aisle(23) P(24)
-  const ROW={A:1,B:3,C:4,D:6,E:7,F:9,G:10,H:12,I:13,J:15,K:16,L:18,M:19,N:21,O:22,P:24};
-  const AISLE_ROWS=[2,5,8,11,14,17,20,23];
-
-  // ── 메인 랙 A~P (col 6) ──
-  'ABCDEFGHIJKLMNOP'.split('').forEach(sec=>{
-    if(!secSet.has(sec)) return;
-    const block=makeSecBlock(sec);
-    placeEl(block,6,ROW[sec]);
-    grid.appendChild(block);
   });
 
-  // ── 통로 (col 6) ──
-  AISLE_ROWS.forEach((r,i)=>{
-    const a=document.createElement('div');
-    a.className='wh-aisle';
-    a.textContent='통로 '+(i+1);
-    placeEl(a,6,r);
-    grid.appendChild(a);
-  });
-
-  // ── 좌측/중앙 섹션 (플레이스홀더 or 실제) ──
-  function placeSec(name, col, r1, r2, vertical){
-    const block=secSet.has(name)?makeSecBlock(name):makePlaceholder(name, vertical);
-    placeEl(block, col, r1, r2);
-    grid.appendChild(block);
+  // extra 섹션 (V,W,AA,BB,X,Y 등)
+  if(g.extra.length){
+    const extraHd=document.createElement('div');
+    extraHd.className='wh-detail-aisle';
+    extraHd.textContent='부속 섹션';
+    sections.appendChild(extraHd);
+    g.extra.forEach(sec=>{
+      if(secSet.has(sec)){
+        sections.appendChild(makeSecBlockFull(sec));
+      } else {
+        const ph=document.createElement('div');
+        ph.className='wh-placeholder';
+        ph.innerHTML=`<span>섹션 ${sec}</span>`;
+        sections.appendChild(ph);
+      }
+    });
   }
 
-  // col 1: U 단독 + T/S/R/Q 가로 한 줄
-  placeSec('U', 1, 15, 17, true);
-  const tsrqRow=document.createElement('div');
-  tsrqRow.style.cssText='display:flex;gap:4px;align-items:stretch;height:100%';
-  ['T','S','R','Q'].forEach(name=>{
-    const block=secSet.has(name)?makeSecBlock(name):makePlaceholder(name,true);
-    block.style.flex='1';
-    tsrqRow.appendChild(block);
-  });
-  placeEl(tsrqRow,1,18,24);
-  grid.appendChild(tsrqRow);
-  // col 3: V/W/X (벽면 세로 선반)
-  placeSec('V', 3, 1, 5, true);
-  placeSec('W', 3, 6, 10, true);
-  placeSec('X', 3, 18, 24, true);
-  // col 4: AA/BB/Y (소형 섹션)
-  placeSec('AA', 4, 1, 1, false);
-  placeSec('BB', 4, 6, 7, false);
-  placeSec('Y', 4, 23, 24, false);
+  detail.appendChild(sections);
+  wrap.appendChild(detail);
+}
 
-  wrap.appendChild(grid);
+function makeSecBlockFull(sec){
+  const even=isEven(sec);
+  const sd=data.filter(d=>d.section===sec);
+  const floors=[...new Set(sd.map(d=>d.floor))].sort((a,b)=>b-a);
+  const act=sd.filter(d=>getSlotState(d)==='IN').length;
+  const hld=sd.filter(d=>getSlotState(d)==='EMPTY').length;
+
+  const secDiv=document.createElement('div');
+  secDiv.className='full-section';
+
+  const hd=document.createElement('div');
+  hd.className='full-sec-hd';
+  hd.innerHTML=`섹션 ${sec}
+    <span style="background:rgba(5,150,105,.12);color:#065f46;padding:1px 6px;border-radius:6px;font-size:9px">✅ ${act}</span>
+    ${hld?`<span style="background:rgba(217,119,6,.12);color:#92400e;padding:1px 6px;border-radius:6px;font-size:9px">⏸ ${hld}</span>`:''}`;
+  secDiv.appendChild(hd);
+
+  floors.forEach(floor=>{
+    const fd=sd.filter(d=>d.floor===floor).sort((a,b)=>a.order-b.order);
+    const floorRow=document.createElement('div');
+    floorRow.className='full-floor-row';
+    const lbl=document.createElement('div');
+    lbl.className='full-floor-lbl';
+    lbl.textContent=floor+'F';
+    floorRow.appendChild(lbl);
+    const slotsWrap=document.createElement('div');
+    slotsWrap.className='full-slots'+(even?' mirrored':'');
+    const isGroupType=t=>t==='흰색'||t==='노란색'||t==='서랍';
+    let i=0;
+    while(i<fd.length){
+      const d=fd[i];
+      if(isGroupType(d.type)){
+        const group=[];let j=i;
+        while(j<fd.length&&fd[j].type===d.type&&group.length<4){group.push(fd[j]);j++;}
+        const isDrawer=d.type==='서랍';
+        const cellW=isDrawer?80:54;
+        const zg=document.createElement('div');
+        zg.className='zgroup'+(isDrawer?' drawers':'');
+        let arranged;
+        if(even){arranged=[group[1]||null,group[0]||null,group[3]||null,group[2]||null];}
+        else{arranged=[group[0]||null,group[1]||null,group[2]||null,group[3]||null];}
+        arranged.forEach(gd=>{
+          if(gd){zg.appendChild(makeSlotEl(gd));}
+          else{const em=document.createElement('div');em.style.cssText=`width:${cellW}px;height:48px;`;zg.appendChild(em);}
+        });
+        slotsWrap.appendChild(zg);i=j;
+      }else{
+        slotsWrap.appendChild(makeSlotEl(d));i++;
+      }
+    }
+    floorRow.appendChild(slotsWrap);
+    secDiv.appendChild(floorRow);
+  });
+  return secDiv;
 }
 
 
