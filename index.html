@@ -317,21 +317,29 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   .pq-print-area{display:block!important}
   .pq-print-area .pq-label{
     display:inline-flex;align-items:stretch;
-    border:1px solid #999;border-radius:4px;
+    border:1px solid #999;border-radius:3px;
     margin:1mm;page-break-inside:avoid;
-    width:75mm;height:28mm;overflow:hidden;background:#fff;
+    width:90mm;height:28mm;overflow:hidden;background:#fff;
   }
+  /* 좌: 소재색+소재명 (좁게) */
   .pq-print-area .pq-label-left{
-    width:30mm;flex-shrink:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;color:#fff;
+    width:12mm;flex-shrink:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#fff;gap:1mm;
   }
-  .pq-print-area .pq-label-loc{font-family:Consolas,monospace;font-size:17pt;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.3)}
-  .pq-print-area .pq-label-mat{font-family:Consolas,monospace;font-size:8pt;font-weight:700;opacity:.85;margin-top:1mm;color:#fff}
+  .pq-print-area .pq-label-matname{font-family:Consolas,monospace;font-size:7pt;font-weight:800;color:#fff;writing-mode:vertical-rl;letter-spacing:1px}
+  /* 중: 치수 (넓게) */
+  .pq-print-area .pq-label-center{
+    flex:1;display:flex;align-items:center;padding:1mm 4mm;
+    border-left:1px solid #e0e0e0;border-right:1px solid #e0e0e0;
+  }
+  .pq-print-area .pq-label-item{font-family:Consolas,monospace;font-size:14pt;font-weight:900;color:#111;white-space:nowrap}
+  /* 우: QR+위치 (붙어있게) */
   .pq-print-area .pq-label-right{
-    flex:1;display:flex;align-items:center;padding:1.5mm 3mm;
-    border-left:1px solid #e0e0e0;
+    width:24mm;flex-shrink:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:0.5mm;padding:1mm;
   }
-  .pq-print-area .pq-label-item{font-family:Consolas,monospace;font-size:10pt;font-weight:800;color:#111}
+  .pq-print-area .pq-label-qr{width:16mm;height:16mm}
+  .pq-print-area .pq-label-loc{font-family:Consolas,monospace;font-size:8pt;font-weight:900;color:#333}
 }
 
 /* ── 인쇄 탭 모드전환 ── */
@@ -3134,20 +3142,38 @@ function printQueue(){
   if(!q.length){showToast('인쇄할 항목이 없습니다');return;}
   const area=document.getElementById('pqPrintArea');
   const printAreaOld=document.getElementById('printArea');
+  const baseUrl=location.origin+location.pathname;
   let h='';
-  q.forEach(function(x){
+  q.forEach(function(x,i){
     const mc=MAT_COLORS[x.mat]||'#94a3b8';
     h+='<div class="pq-label">';
+    // 좌: 소재색+소재명
     h+='<div class="pq-label-left" style="background:'+mc+'">';
-    h+='<div class="pq-label-loc">'+x.loc+'</div>';
-    if(x.mat) h+='<div class="pq-label-mat">'+x.mat+'</div>';
+    if(x.mat) h+='<div class="pq-label-matname">'+x.mat+'</div>';
     h+='</div>';
+    // 중: 치수
+    h+='<div class="pq-label-center">';
+    h+='<div class="pq-label-item">'+(x.item||'-')+'</div>';
+    h+='</div>';
+    // 우: QR+위치
     h+='<div class="pq-label-right">';
-    if(x.item) h+='<div class="pq-label-item">'+x.item+'</div>';
+    h+='<div class="pq-label-qr" id="pqlQr'+i+'"></div>';
+    h+='<div class="pq-label-loc">'+x.loc+'</div>';
     h+='</div></div>';
   });
   area.innerHTML=h;
-  // 인쇄 시 다른 영역 숨기기
+  // QR 생성
+  q.forEach(function(x,i){
+    try{
+      new QRCode(document.getElementById('pqlQr'+i),{
+        text:baseUrl+'?slot='+encodeURIComponent(x.loc),
+        width:60,height:60,
+        colorDark:'#000',colorLight:'#fff',
+        correctLevel:QRCode.CorrectLevel.M
+      });
+    }catch(e){}
+  });
+  // 인쇄
   printAreaOld.innerHTML='';
   area.style.display='block';
   document.querySelectorAll('.panel,.topbar,.tabbar,.sheet-backdrop,.sheet,.toast,.search-result-panel').forEach(el=>el.dataset.pqHide=el.style.display||'');
@@ -3158,7 +3184,7 @@ function printQueue(){
       document.querySelectorAll('[data-pq-hide]').forEach(el=>{el.style.display=el.dataset.pqHide;delete el.dataset.pqHide;});
       area.style.display='none';
     },500);
-  },200);
+  },400);
 }
 
 /* ── 전체 라벨 인쇄 ── */
