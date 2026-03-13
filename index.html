@@ -264,7 +264,8 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot.mat-RS20{background:#9ca3af!important;border-color:#6b7280!important;color:#fff!important}
 .slot.mat-CM20{background:#d1d5db!important;border-color:#b0b5bc!important;color:#374151!important}
 
-/* 소재 없이 품목만 있는 경우 */
+/* 품목 있는 슬롯: 넓혀서 치수 표시 */
+.slot.has-item{width:auto!important;min-width:48px;max-width:110px;height:auto!important;min-height:48px}
 .slot.has-item:not([class*="mat-"]){background:#94a3b8!important;border-color:#64748b!important;color:#fff!important}
 
 .slot-id{font-size:9px;line-height:1;font-weight:700;letter-spacing:.2px}
@@ -2483,6 +2484,7 @@ function makeSlotEl(d){
 
   const slotId=`${d.section}${d.floor}-${d.order}`;
   let inner=`<span class="slot-id">${d.order}</span>`;
+  if(d.item) inner+=`<span class="slot-item">${d.item}</span>`;
   if(d.material) inner+=`<span class="slot-material">${d.material}</span>`;
 
   // 호버 툴팁
@@ -2562,7 +2564,7 @@ sheet.addEventListener('touchmove',e=>{
 /* ── 전체뷰 렌더링 ── */
 // 그룹 정의
 const WH_GROUPS=[
-  {id:'AJ', label:'A ~ J', secs:['A','B','C','D','E','F','G','H','I','J'], extra:['V','AA','W','BB'], color:'#d97706',
+  {id:'AJ', label:'A ~ J', secs:['A','B','C','D','E','F','G','H','I','J'], extra:['V','W','AA','BB'], color:'#d97706',
    aisles:[[['A'],'통로 1',['B','C'],'통로 2',['D','E'],'통로 3',['F','G'],'통로 4',['H','I'],'통로 5',['J']]]},
   {id:'KP', label:'K ~ P', secs:['K','L','M','N','O','P'], extra:['X','Y'], color:'#059669',
    aisles:[[['K'],'통로 6',['L','M'],'통로 7',['N','O'],'통로 8',['P']]]},
