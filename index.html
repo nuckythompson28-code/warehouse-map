@@ -166,17 +166,12 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .wh-grid{
   display:grid;
   grid-template-columns:
-    minmax(50px,auto) /* 1: T/U */
+    minmax(50px,auto) /* 1: Q/R/S/T/U */
     8px               /* 2: gap */
-    minmax(50px,auto) /* 3: S */
-    minmax(50px,auto) /* 4: R */
-    8px               /* 5: gap */
-    minmax(50px,auto) /* 6: Q */
-    8px               /* 7: gap */
-    minmax(50px,auto) /* 8: V/W/X */
-    minmax(40px,auto) /* 9: AA/BB/Y */
-    12px              /* 10: gap */
-    1fr;              /* 11: main racks */
+    minmax(50px,auto) /* 3: V/W/X */
+    minmax(40px,auto) /* 4: AA/BB/Y */
+    12px              /* 5: gap */
+    1fr;              /* 6: main racks */
   grid-template-rows:repeat(24,auto);
   gap:4px 0;
   align-items:stretch;
@@ -2625,20 +2620,20 @@ function renderFullView(){
   const ROW={A:1,B:3,C:4,D:6,E:7,F:9,G:10,H:12,I:13,J:15,K:16,L:18,M:19,N:21,O:22,P:24};
   const AISLE_ROWS=[2,5,8,11,14,17,20,23];
 
-  // ── 메인 랙 A~P (col 11) ──
+  // ── 메인 랙 A~P (col 6) ──
   'ABCDEFGHIJKLMNOP'.split('').forEach(sec=>{
     if(!secSet.has(sec)) return;
     const block=makeSecBlock(sec);
-    placeEl(block,11,ROW[sec]);
+    placeEl(block,6,ROW[sec]);
     grid.appendChild(block);
   });
 
-  // ── 통로 (col 11) ──
+  // ── 통로 (col 6) ──
   AISLE_ROWS.forEach((r,i)=>{
     const a=document.createElement('div');
     a.className='wh-aisle';
     a.textContent='통로 '+(i+1);
-    placeEl(a,11,r);
+    placeEl(a,6,r);
     grid.appendChild(a);
   });
 
@@ -2649,28 +2644,20 @@ function renderFullView(){
     grid.appendChild(block);
   }
 
-  // V: col 8, rows 1-5 (A~aisle2 구간, 세로 선반)
-  placeSec('V', 8, 1, 5, true);
-  // W: col 8, rows 6-10 (D~G 구간, 세로 선반)
-  placeSec('W', 8, 6, 10, true);
-  // U: col 1, rows 15-17 (J~aisle6 구간)
+  // col 1: Q/R/S/T/U 세로 배치
+  placeSec('Q', 1, 8, 11, true);
+  placeSec('R', 1, 12, 14, true);
   placeSec('U', 1, 15, 17, true);
-  // T: col 1, rows 18-24 (L~P 구간)
-  placeSec('T', 1, 18, 24, true);
-  // S: col 3, rows 18-24
-  placeSec('S', 3, 18, 24, true);
-  // R: col 4, rows 18-24
-  placeSec('R', 4, 18, 24, true);
-  // Q: col 6, rows 18-24
-  placeSec('Q', 6, 18, 24, true);
-  // X: col 8, rows 18-24
-  placeSec('X', 8, 18, 24, true);
-  // AA: col 9, row 1 (A 옆)
-  placeSec('AA', 9, 1, 1, false);
-  // BB: col 9, rows 6-7 (D/E 옆)
-  placeSec('BB', 9, 6, 7, false);
-  // Y: col 9, rows 23-24 (P 옆)
-  placeSec('Y', 9, 23, 24, false);
+  placeSec('S', 1, 18, 20, true);
+  placeSec('T', 1, 21, 24, true);
+  // col 3: V/W/X (벽면 세로 선반)
+  placeSec('V', 3, 1, 5, true);
+  placeSec('W', 3, 6, 10, true);
+  placeSec('X', 3, 18, 24, true);
+  // col 4: AA/BB/Y (소형 섹션)
+  placeSec('AA', 4, 1, 1, false);
+  placeSec('BB', 4, 6, 7, false);
+  placeSec('Y', 4, 23, 24, false);
 
   wrap.appendChild(grid);
 }
