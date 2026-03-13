@@ -286,6 +286,47 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 }
 .sheet-btn.cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
 .sheet-btn.save{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.sheet-btn.queue{background:#6366f1;color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+
+/* ── 인쇄 대기열 ── */
+.pq-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pq-toolbar-title{font-family:'IBM Plex Mono';font-size:14px;font-weight:700;color:var(--accent)}
+.pq-count{font-size:12px;color:var(--muted)}
+.pq-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:7px 14px;font-size:12px;cursor:pointer;color:var(--text);font-family:inherit;box-shadow:var(--shadow);
+}
+.pq-btn.print{background:var(--accent);color:#fff;border:none;font-weight:700;box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.pq-btn.clear{color:#dc2626;border-color:#fecaca}
+.pq-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.pq-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+.pq-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;width:calc(50% - 4px);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:4px;position:relative;
+}
+.pq-card-loc{font-family:'IBM Plex Mono';font-size:15px;font-weight:800;color:var(--accent)}
+.pq-card-item{font-size:13px;font-weight:700;color:var(--text);word-break:break-all}
+.pq-card-mat{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block;color:#fff;width:fit-content}
+.pq-card-del{
+  position:absolute;top:6px;right:8px;background:none;border:none;
+  font-size:16px;cursor:pointer;color:var(--muted);padding:2px 6px;
+}
+.pq-card-del:hover{color:#dc2626}
+@media print{
+  .pq-print-area{display:block!important}
+  .pq-print-area .pq-label{
+    display:inline-flex;align-items:center;gap:3mm;
+    border:1.5px solid #333;border-radius:4px;
+    padding:2mm 3mm;margin:1mm;page-break-inside:avoid;
+    width:60mm;height:22mm;overflow:hidden;background:#fff;
+  }
+  .pq-print-area .pq-label-cb{width:4mm;height:100%;flex-shrink:0;border-radius:2px}
+  .pq-print-area .pq-label-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1mm}
+  .pq-print-area .pq-label-loc{font-family:Consolas,monospace;font-size:11pt;font-weight:800;color:#111}
+  .pq-print-area .pq-label-item{font-family:Consolas,monospace;font-size:9pt;font-weight:700;color:#333}
+  .pq-print-area .pq-label-mat{font-family:Consolas,monospace;font-size:8pt;font-weight:700}
+}
 
 /* ── 공지 토스트 ── */
 .toast{
@@ -669,8 +710,21 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   </div>
 </div>
 
+<!-- 인쇄 대기열 패널 -->
+<div class="panel" id="panel-queue">
+  <div class="pq-toolbar">
+    <div class="pq-toolbar-title">🏷 인쇄 대기열</div>
+    <div class="pq-count" id="pqCount">0개</div>
+    <div style="flex:1"></div>
+    <button class="pq-btn clear" onclick="clearPrintQueue()">전체삭제</button>
+    <button class="pq-btn print" onclick="printQueue()">A4 인쇄</button>
+  </div>
+  <div id="pqList"></div>
+</div>
+
 <!-- PDF 인쇄 영역 (화면에 숨김, 인쇄시만 표시) -->
 <div id="printArea"></div>
+<div class="pq-print-area" id="pqPrintArea" style="display:none"></div>
 
 <!-- 바텀 탭바 -->
 <div class="tabbar">
@@ -685,6 +739,9 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   </div>
   <div class="tabbar-item" id="tab-table" onclick="switchTab('table')">
     <div class="tabbar-icon">📊</div>목록
+  </div>
+  <div class="tabbar-item" id="tab-queue" onclick="switchTab('queue')">
+    <div class="tabbar-icon">🏷</div>인쇄<span class="pq-badge" id="pqBadge" style="display:none;background:#dc2626;color:#fff;font-size:9px;border-radius:8px;padding:0 5px;margin-left:2px;font-weight:700"></span>
   </div>
 </div>
 
@@ -748,6 +805,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   </div>
   <div class="sheet-actions">
     <button class="sheet-btn cancel" onclick="closeSheet()">취소</button>
+    <button class="sheet-btn queue" onclick="addToQueue()">🏷 인쇄추가</button>
     <button class="sheet-btn save" onclick="saveSheet()">저장</button>
   </div>
 </div>
@@ -1819,6 +1877,7 @@ function switchTab(name){
   if(name==='list')renderList();
   if(name==='full')renderFullView();
   if(name==='table')renderTable();
+  if(name==='queue')renderPrintQueue();
 }
 
 function openSection(sec){
@@ -2900,7 +2959,104 @@ function printSelected(){
   setTimeout(()=>window.print(), 600);
 }
 
-function renderAll(){renderFullView();renderOverview();renderList();}
+function renderAll(){renderFullView();renderOverview();renderList();updateQueueBadge();}
+
+/* ── 인쇄 대기열 ── */
+const PQ_KEY='wh_print_queue';
+function getPrintQueue(){ try{return JSON.parse(localStorage.getItem(PQ_KEY))||[]}catch(e){return[]} }
+function savePrintQueue(q){ localStorage.setItem(PQ_KEY,JSON.stringify(q)); updateQueueBadge(); }
+
+function updateQueueBadge(){
+  const q=getPrintQueue();
+  const badge=document.getElementById('pqBadge');
+  if(q.length>0){badge.style.display='inline';badge.textContent=q.length;}
+  else{badge.style.display='none';}
+}
+
+function addToQueue(){
+  if(editingId===null)return;
+  const d=data[editingId];
+  const loc=`${d.section}${d.floor}-${d.order}`;
+  const item=document.getElementById('sheetItem').value.trim();
+  const mat=document.getElementById('sheetMaterial').value.trim();
+  if(!item && !mat){showToast('품목코드 또는 소재를 입력해주세요');return;}
+  const q=getPrintQueue();
+  // 중복 체크
+  const exists=q.find(x=>x.loc===loc && x.item===item && x.mat===mat);
+  if(exists){showToast('이미 대기열에 있습니다');return;}
+  q.push({loc,item,mat,ts:Date.now()});
+  savePrintQueue(q);
+  showToast('🏷 인쇄 대기열에 추가됨 ('+q.length+'개)');
+}
+
+function removePQItem(idx){
+  const q=getPrintQueue();
+  q.splice(idx,1);
+  savePrintQueue(q);
+  renderPrintQueue();
+}
+
+function clearPrintQueue(){
+  if(!getPrintQueue().length)return;
+  if(!confirm('대기열을 모두 삭제할까요?'))return;
+  savePrintQueue([]);
+  renderPrintQueue();
+}
+
+const MAT_COLORS={CN10:'#ca8a04',CN20:'#374151',RS40:'#0d9488',RS20:'#6b7280',CM20:'#a07850'};
+
+function renderPrintQueue(){
+  const q=getPrintQueue();
+  const wrap=document.getElementById('pqList');
+  document.getElementById('pqCount').textContent=q.length+'개';
+  if(!q.length){
+    wrap.innerHTML='<div class="pq-empty">대기열이 비어있습니다.<br>슬롯 편집 화면에서 🏷 인쇄추가 버튼을 눌러주세요.</div>';
+    return;
+  }
+  let h='<div class="pq-list">';
+  q.forEach(function(x,i){
+    const mc=MAT_COLORS[x.mat]||'#999';
+    h+='<div class="pq-card">';
+    h+='<button class="pq-card-del" onclick="removePQItem('+i+')">✕</button>';
+    h+='<div class="pq-card-loc">'+x.loc+'</div>';
+    if(x.item) h+='<div class="pq-card-item">'+x.item+'</div>';
+    if(x.mat) h+='<div class="pq-card-mat" style="background:'+mc+'">'+x.mat+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  wrap.innerHTML=h;
+}
+
+function printQueue(){
+  const q=getPrintQueue();
+  if(!q.length){showToast('인쇄할 항목이 없습니다');return;}
+  const area=document.getElementById('pqPrintArea');
+  const printAreaOld=document.getElementById('printArea');
+  let h='';
+  q.forEach(function(x){
+    const mc=MAT_COLORS[x.mat]||'#999';
+    h+='<div class="pq-label">';
+    h+='<div class="pq-label-cb" style="background:'+mc+'"></div>';
+    h+='<div class="pq-label-info">';
+    h+='<div class="pq-label-loc">'+x.loc+'</div>';
+    if(x.item) h+='<div class="pq-label-item">'+x.item+'</div>';
+    if(x.mat) h+='<div class="pq-label-mat" style="color:'+mc+'">'+x.mat+'</div>';
+    h+='</div></div>';
+  });
+  area.innerHTML=h;
+  // 인쇄 시 다른 영역 숨기기
+  printAreaOld.innerHTML='';
+  area.style.display='block';
+  document.querySelectorAll('.panel,.topbar,.tabbar,.sheet-backdrop,.sheet,.toast,.search-result-panel').forEach(el=>el.dataset.pqHide=el.style.display||'');
+  document.querySelectorAll('.panel,.topbar,.tabbar,.sheet-backdrop,.sheet,.toast,.search-result-panel').forEach(el=>el.style.display='none');
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){
+      document.querySelectorAll('[data-pq-hide]').forEach(el=>{el.style.display=el.dataset.pqHide;delete el.dataset.pqHide;});
+      area.style.display='none';
+    },500);
+  },200);
+}
 // 초기 로딩: 구글 시트에서 데이터 가져온 후 렌더
 // QR코드 스캔 시 슬롯 자동 오픈
 function handleQRParam(){
