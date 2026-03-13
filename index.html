@@ -313,34 +313,32 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   font-size:16px;cursor:pointer;color:var(--muted);padding:2px 6px;
 }
 .pq-card-del:hover{color:#dc2626}
-@media print{
-  .pq-print-area{display:block!important}
-  .pq-print-area .pq-label{
-    display:inline-flex;align-items:stretch;
-    border:1px solid #999;border-radius:3px;
-    margin:1mm;page-break-inside:avoid;
-    width:90mm;height:28mm;overflow:hidden;background:#fff;
-  }
-  /* 좌: 소재색+소재명 (좁게) */
-  .pq-print-area .pq-label-left{
-    width:12mm;flex-shrink:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;color:#fff;gap:1mm;
-  }
-  .pq-print-area .pq-label-matname{font-family:Consolas,monospace;font-size:7pt;font-weight:800;color:#fff;writing-mode:vertical-rl;letter-spacing:1px}
-  /* 중: 치수 (넓게) */
-  .pq-print-area .pq-label-center{
-    flex:1;display:flex;align-items:center;padding:1mm 4mm;
-    border-left:1px solid #e0e0e0;border-right:1px solid #e0e0e0;
-  }
-  .pq-print-area .pq-label-item{font-family:Consolas,monospace;font-size:14pt;font-weight:900;color:#111;white-space:nowrap}
-  /* 우: QR+위치 (붙어있게) */
-  .pq-print-area .pq-label-right{
-    width:24mm;flex-shrink:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:0.5mm;padding:1mm;
-  }
-  .pq-print-area .pq-label-qr{width:16mm;height:16mm}
-  .pq-print-area .pq-label-loc{font-family:Consolas,monospace;font-size:8pt;font-weight:900;color:#333}
+/* 대기열 인쇄 라벨 (화면+인쇄 공통) */
+.pq-print-area{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.pq-print-area .pq-label{
+  display:inline-flex;align-items:stretch;
+  border:1.5px solid #999;border-radius:3px;
+  margin:1mm;page-break-inside:avoid;
+  width:90mm;height:28mm;overflow:hidden;background:#fff;
 }
+.pq-print-area .pq-label-left{
+  width:12mm;flex-shrink:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;color:#fff;gap:1mm;
+  -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+}
+.pq-print-area .pq-label-matname{font-family:Consolas,monospace;font-size:7pt;font-weight:800;color:#fff;writing-mode:vertical-rl;letter-spacing:1px}
+.pq-print-area .pq-label-center{
+  flex:1;display:flex;align-items:center;padding:1mm 4mm;
+  border-left:1px solid #e0e0e0;border-right:1px solid #e0e0e0;
+}
+.pq-print-area .pq-label-item{font-family:Consolas,monospace;font-size:14pt;font-weight:900;color:#111;white-space:nowrap}
+.pq-print-area .pq-label-right{
+  width:24mm;flex-shrink:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0.5mm;padding:1mm;
+}
+.pq-print-area .pq-label-qr{width:16mm;height:16mm}
+.pq-print-area .pq-label-qr img,.pq-print-area .pq-label-qr canvas{width:100%!important;height:100%!important}
+.pq-print-area .pq-label-loc{font-family:Consolas,monospace;font-size:8pt;font-weight:900;color:#333}
 
 /* ── 인쇄 탭 모드전환 ── */
 .pq-tabs{display:flex;gap:4px;margin-bottom:12px}
@@ -653,9 +651,11 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 
 @media print{
   body > *{display:none!important}
-  #printArea{
+  #printArea, #pqPrintArea{
     display:block!important;
     font-family:'IBM Plex Mono',monospace;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
   }
   .print-card{
     width:200mm;height:30mm;
