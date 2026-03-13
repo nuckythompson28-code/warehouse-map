@@ -2644,12 +2644,17 @@ function renderFullView(){
     grid.appendChild(block);
   }
 
-  // col 1: Q/R/S/T/U 세로 배치
-  placeSec('Q', 1, 8, 11, true);
-  placeSec('R', 1, 12, 14, true);
+  // col 1: U 단독 + T/S/R/Q 가로 한 줄
   placeSec('U', 1, 15, 17, true);
-  placeSec('S', 1, 18, 20, true);
-  placeSec('T', 1, 21, 24, true);
+  const tsrqRow=document.createElement('div');
+  tsrqRow.style.cssText='display:flex;gap:4px;align-items:stretch;height:100%';
+  ['T','S','R','Q'].forEach(name=>{
+    const block=secSet.has(name)?makeSecBlock(name):makePlaceholder(name,true);
+    block.style.flex='1';
+    tsrqRow.appendChild(block);
+  });
+  placeEl(tsrqRow,1,18,24);
+  grid.appendChild(tsrqRow);
   // col 3: V/W/X (벽면 세로 선반)
   placeSec('V', 3, 1, 5, true);
   placeSec('W', 3, 6, 10, true);
