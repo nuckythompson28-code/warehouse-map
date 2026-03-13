@@ -159,7 +159,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 
 
 /* ── 전체뷰 ── */
-#panel-full{overflow:hidden;position:relative;}
+#panel-full{overflow:hidden;position:relative;height:calc(100vh - 160px);}
 .full-warehouse{padding:12px;min-width:max-content;}
 
 /* 그룹 카드 개요 */
@@ -3427,12 +3427,12 @@ loadFromSheet(); // 백그라운드에서 서버 최신 데이터 가져오기
   }
 
   function clampOrigin(){
-    // 최소: 캔버스가 뷰포트 밖으로 완전히 나가지 않게
     const vw=viewport.clientWidth, vh=viewport.clientHeight;
     const cw=canvas.scrollWidth*scale, ch=canvas.scrollHeight*scale;
-    const minX=Math.min(0, vw-cw), minY=Math.min(0, vh-ch);
-    originX=Math.max(minX, Math.min(0, originX));
-    originY=Math.max(minY, Math.min(0, originY));
+    const margin=100;
+    const minX=Math.min(0, vw-cw-margin), minY=Math.min(0, vh-ch-margin);
+    originX=Math.max(minX, Math.min(margin, originX));
+    originY=Math.max(minY, Math.min(margin, originY));
   }
 
   // 초기 스케일: 전체가 화면에 들어오게
@@ -3513,6 +3513,28 @@ loadFromSheet(); // 백그라운드에서 서버 최신 데이터 가져오기
     if(e.touches.length<2) lastDist=0;
     if(e.touches.length===0) dragging=false;
   },{passive:true});
+
+  // 마우스 드래그 (데스크탑)
+  let mouseDown=false, mStartX=0, mStartY=0, mOriginX=0, mOriginY=0;
+  viewport.addEventListener('mousedown', e=>{
+    mouseDown=true;
+    mStartX=e.clientX; mStartY=e.clientY;
+    mOriginX=originX; mOriginY=originY;
+    viewport.style.cursor='grabbing';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!mouseDown) return;
+    originX=mOriginX+(e.clientX-mStartX);
+    originY=mOriginY+(e.clientY-mStartY);
+    clampOrigin();
+    applyTransform();
+  });
+  window.addEventListener('mouseup', ()=>{
+    mouseDown=false;
+    viewport.style.cursor='grab';
+  });
+  viewport.style.cursor='grab';
 
   // 마우스 휠 (데스크탑) → 스크롤 이동
   viewport.addEventListener('wheel', e=>{
