@@ -328,6 +328,63 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   .pq-print-area .pq-label-mat{font-family:Consolas,monospace;font-size:8pt;font-weight:700}
 }
 
+/* ── 인쇄 탭 모드전환 ── */
+.pq-tabs{display:flex;gap:4px;margin-bottom:12px}
+.pq-tab{
+  flex:1;padding:10px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;color:var(--muted);
+}
+.pq-tab.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.pq-select{
+  font-family:inherit;font-size:12px;padding:7px 12px;
+  border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;color:var(--text);
+}
+.pq-so{display:flex;gap:3px}
+.pq-sz{font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--surface)}
+.pq-sz input{display:none}
+.pq-sz input:checked+span{color:var(--accent);font-weight:700}
+
+/* ── 전체 라벨 프리뷰 ── */
+.lbl-preview{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding-top:8px}
+.lbl-card{
+  border:2px solid #333;border-radius:6px;
+  display:flex;align-items:stretch;
+  overflow:hidden;background:#fff;page-break-inside:avoid;
+}
+.lbl-card.lg{width:90mm;height:35mm}
+.lbl-card.md{width:70mm;height:26mm}
+.lbl-card.sm{width:52mm;height:20mm}
+.lbl-cb{flex-shrink:0}
+.lbl-card.lg .lbl-cb{width:5mm}
+.lbl-card.md .lbl-cb{width:4mm}
+.lbl-card.sm .lbl-cb{width:3mm}
+.lbl-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1mm;min-width:0}
+.lbl-card.lg .lbl-info{padding:2mm 4mm}
+.lbl-card.md .lbl-info{padding:1.5mm 3mm}
+.lbl-card.sm .lbl-info{padding:1mm 2mm}
+.lbl-loc{font-family:Consolas,'Courier New',monospace;font-weight:900;color:#000;line-height:1;white-space:nowrap}
+.lbl-card.lg .lbl-loc{font-size:22pt}
+.lbl-card.md .lbl-loc{font-size:16pt}
+.lbl-card.sm .lbl-loc{font-size:11pt}
+.lbl-item{font-family:Consolas,monospace;font-weight:700;color:#333;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl-card.lg .lbl-item{font-size:10pt}
+.lbl-card.md .lbl-item{font-size:8pt}
+.lbl-card.sm .lbl-item{font-size:6.5pt}
+.lbl-mat{font-family:Consolas,monospace;font-weight:800;line-height:1}
+.lbl-card.lg .lbl-mat{font-size:9pt}
+.lbl-card.md .lbl-mat{font-size:7.5pt}
+.lbl-card.sm .lbl-mat{font-size:6pt}
+.lbl-qr{flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.lbl-card.lg .lbl-qr{width:24mm;padding:2mm}
+.lbl-card.md .lbl-qr{width:18mm;padding:1.5mm}
+.lbl-card.sm .lbl-qr{width:14mm;padding:1mm}
+
+@media print{
+  .lbl-preview{padding:0;gap:1.5mm;justify-content:flex-start}
+  .lbl-card{border:1.5px solid #333}
+}
+
 /* ── 공지 토스트 ── */
 .toast{
   position:fixed;bottom:calc(70px + var(--safe-bottom));left:50%;transform:translateX(-50%);
@@ -710,16 +767,42 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   </div>
 </div>
 
-<!-- 인쇄 대기열 패널 -->
+<!-- 인쇄 패널 -->
 <div class="panel" id="panel-queue">
-  <div class="pq-toolbar">
-    <div class="pq-toolbar-title">🏷 인쇄 대기열</div>
-    <div class="pq-count" id="pqCount">0개</div>
-    <div style="flex:1"></div>
-    <button class="pq-btn clear" onclick="clearPrintQueue()">전체삭제</button>
-    <button class="pq-btn print" onclick="printQueue()">A4 인쇄</button>
+  <!-- 상단 모드 전환 -->
+  <div class="pq-tabs">
+    <button class="pq-tab on" id="pqTabQueue" onclick="pqSwitchMode('queue')">대기열</button>
+    <button class="pq-tab" id="pqTabLabel" onclick="pqSwitchMode('label')">전체 라벨</button>
   </div>
-  <div id="pqList"></div>
+
+  <!-- 대기열 모드 -->
+  <div id="pqModeQueue">
+    <div class="pq-toolbar">
+      <div class="pq-count" id="pqCount">0개</div>
+      <div style="flex:1"></div>
+      <button class="pq-btn clear" onclick="clearPrintQueue()">전체삭제</button>
+      <button class="pq-btn print" onclick="printQueue()">A4 인쇄</button>
+    </div>
+    <div id="pqList"></div>
+  </div>
+
+  <!-- 전체 라벨 모드 -->
+  <div id="pqModeLabel" style="display:none">
+    <div class="pq-toolbar">
+      <select id="lblSec" class="pq-select" onchange="renderLabels()">
+        <option value="all">전체 섹션</option>
+      </select>
+      <div class="pq-so">
+        <label class="pq-sz"><input type="radio" name="lblSz" value="lg" onchange="renderLabels()"><span>대</span></label>
+        <label class="pq-sz"><input type="radio" name="lblSz" value="md" onchange="renderLabels()" checked><span>중</span></label>
+        <label class="pq-sz"><input type="radio" name="lblSz" value="sm" onchange="renderLabels()"><span>소</span></label>
+      </div>
+      <div class="pq-count" id="lblCount">0개</div>
+      <div style="flex:1"></div>
+      <button class="pq-btn print" onclick="printLabels()">인쇄</button>
+    </div>
+    <div id="lblPreview" class="lbl-preview"></div>
+  </div>
 </div>
 
 <!-- PDF 인쇄 영역 (화면에 숨김, 인쇄시만 표시) -->
@@ -3055,6 +3138,89 @@ function printQueue(){
     },500);
   },200);
 }
+
+/* ── 전체 라벨 인쇄 ── */
+function pqSwitchMode(mode){
+  document.getElementById('pqTabQueue').classList.toggle('on',mode==='queue');
+  document.getElementById('pqTabLabel').classList.toggle('on',mode==='label');
+  document.getElementById('pqModeQueue').style.display=mode==='queue'?'':'none';
+  document.getElementById('pqModeLabel').style.display=mode==='label'?'':'none';
+  if(mode==='label') initLabelSections();
+}
+
+function initLabelSections(){
+  const sel=document.getElementById('lblSec');
+  const old=sel.value;
+  sel.innerHTML='<option value="all">전체 섹션</option>';
+  const secs=[...new Set(data.map(d=>d.section))].sort();
+  secs.forEach(s=>{
+    const o=document.createElement('option');o.value=s;o.textContent='섹션 '+s;sel.appendChild(o);
+  });
+  sel.value=old||'all';
+  renderLabels();
+}
+
+function getLblSize(){
+  const r=document.querySelector('input[name=lblSz]:checked');
+  return r?r.value:'md';
+}
+
+function renderLabels(){
+  const sec=document.getElementById('lblSec').value;
+  const sz=getLblSize();
+  const qsz=sz==='lg'?76:sz==='md'?56:40;
+  const baseUrl=location.origin+location.pathname;
+  const list=data.filter(d=>sec==='all'||d.section===sec)
+    .sort((a,b)=>a.section.localeCompare(b.section)||(a.floor-b.floor)||(a.order-b.order));
+
+  document.getElementById('lblCount').textContent=list.length+'개';
+  const wrap=document.getElementById('lblPreview');
+  wrap.innerHTML='';
+
+  list.forEach(d=>{
+    const loc=`${d.section}${d.floor}-${d.order}`;
+    const clr=MAT_COLORS[d.material]||'#d1d5db';
+    const card=document.createElement('div');
+    card.className='lbl-card '+sz;
+
+    let h='<div class="lbl-cb" style="background:'+clr+'"></div>';
+    h+='<div class="lbl-info">';
+    h+='<div class="lbl-loc">'+loc+'</div>';
+    if(d.item) h+='<div class="lbl-item">'+d.item+'</div>';
+    if(d.material) h+='<div class="lbl-mat" style="color:'+clr+'">'+d.material+'</div>';
+    h+='</div>';
+    h+='<div class="lbl-qr"></div>';
+    card.innerHTML=h;
+    wrap.appendChild(card);
+
+    try{
+      new QRCode(card.querySelector('.lbl-qr'),{
+        text:baseUrl+'?slot='+encodeURIComponent(loc),
+        width:qsz,height:qsz,
+        colorDark:'#000',colorLight:'#fff',
+        correctLevel:QRCode.CorrectLevel.M
+      });
+    }catch(e){}
+  });
+}
+
+function printLabels(){
+  const wrap=document.getElementById('lblPreview');
+  if(!wrap.children.length){showToast('인쇄할 라벨이 없습니다');return;}
+  // 라벨 영역만 인쇄
+  const area=document.getElementById('pqPrintArea');
+  area.innerHTML=wrap.innerHTML;
+  area.style.display='block';
+  document.querySelectorAll('.panel,.topbar,.tabbar,.sheet-backdrop,.sheet,.toast,.search-result-panel').forEach(el=>{el.dataset.pqHide=el.style.display||'';el.style.display='none';});
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{
+      document.querySelectorAll('[data-pq-hide]').forEach(el=>{el.style.display=el.dataset.pqHide;delete el.dataset.pqHide;});
+      area.style.display='none';
+    },500);
+  },300);
+}
+
 // 초기 로딩: 구글 시트에서 데이터 가져온 후 렌더
 // QR코드 스캔 시 슬롯 자동 오픈
 function handleQRParam(){
