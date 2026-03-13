@@ -236,11 +236,11 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slots-row{display:flex;flex-wrap:nowrap;gap:2px;align-items:center;overflow-x:auto;padding-bottom:2px}
 .slots-row.mirrored{flex-direction:row-reverse}
 .slots-row::-webkit-scrollbar{display:none}
-.zgroup{display:inline-grid;grid-template-columns:120px 120px;grid-template-rows:24px 24px;gap:2px;flex-shrink:0;align-self:flex-start;border-radius:6px;overflow:hidden;height:50px;}
-.zgroup.drawers{grid-template-columns:120px 120px;grid-template-rows:24px 24px;gap:2px;height:50px}
+.zgroup{display:inline-grid;grid-template-columns:48px 48px;grid-template-rows:24px 24px;gap:2px;flex-shrink:0;align-self:flex-start;border-radius:6px;overflow:hidden;height:50px;}
+.zgroup.drawers{grid-template-columns:48px 48px;grid-template-rows:24px 24px;gap:2px;height:50px}
 
 .slot{
-  width:120px;height:48px;border-radius:6px;
+  width:48px;height:48px;border-radius:6px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
   font-family:'IBM Plex Mono';font-size:9px;font-weight:700;cursor:pointer;position:relative;
   border:1.5px solid transparent;flex-shrink:0;transition:all .08s;gap:1px;padding:2px;
@@ -253,9 +253,9 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 
 /* 기본: 빈 슬롯 연회색 */
 .slot{background:#e8e4de;border-color:#d5cfc6;color:#78716c}
-.slot.풀박스{width:243px;height:48px}
-.slot.흰색,.slot.노란색,.slot.서랍{width:120px;height:100%}
-.slot.초소형{width:90px;height:48px}
+.slot.풀박스{width:100px;height:48px}
+.slot.흰색,.slot.노란색,.slot.서랍{width:48px;height:100%}
+.slot.초소형{width:36px;height:48px}
 
 /* 소재 있으면 소재색 */
 .slot.mat-CN10{background:#facc15!important;border-color:#fcd34d!important;color:#78350f!important}
@@ -267,11 +267,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot.has-item:not([class*="mat-"]){background:#94a3b8!important;border-color:#64748b!important;color:#fff!important}
 
 .slot-id{font-size:9px;line-height:1;font-weight:700;letter-spacing:.2px}
-.slot-item{
-  font-size:7px;font-weight:700;line-height:1.1;
-  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  width:100%;max-width:100%;opacity:.85;
-}
+.slot-item{display:none}
 .slot-material{font-size:8px;font-weight:800;opacity:.9;line-height:1}
 .slot-loc{display:none}
 .slot-order{display:none}
@@ -2447,7 +2443,7 @@ function renderDetail(sec){
         let j=i;
         while(j<fd.length&&fd[j].type===d.type&&group.length<4){group.push(fd[j]);j++;}
         const isDrawer=d.type==='서랍';
-        const cellW=120;
+        const cellW=48;
         const zg=document.createElement('div');
         zg.className='zgroup'+(isDrawer?' drawers':'');
 
@@ -2481,7 +2477,6 @@ function makeSlotEl(d){
 
   const slotId=`${d.section}${d.floor}-${d.order}`;
   let inner=`<span class="slot-id">${d.order}</span>`;
-  if(d.item) inner+=`<span class="slot-item">${d.item}</span>`;
   if(d.material) inner+=`<span class="slot-material">${d.material}</span>`;
 
   // 호버 툴팁
@@ -2728,7 +2723,7 @@ function makeSecBlockFull(sec){
         const group=[];let j=i;
         while(j<fd.length&&fd[j].type===d.type&&group.length<4){group.push(fd[j]);j++;}
         const isDrawer=d.type==='서랍';
-        const cellW=120;
+        const cellW=48;
         const zg=document.createElement('div');
         zg.className='zgroup'+(isDrawer?' drawers':'');
         let arranged;
