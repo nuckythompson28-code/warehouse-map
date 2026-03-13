@@ -756,6 +756,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 function checkPw(){
   if(document.getElementById('pwInput').value==='soltri2323'){
     document.getElementById('lockScreen').style.display='none';
+    setTimeout(function(){ if(window.reinitMap) window.reinitMap(); }, 200);
   }else{
     document.getElementById('pwError').style.display='block';
     document.getElementById('pwInput').value='';
@@ -3444,6 +3445,7 @@ loadFromSheet(); // 백그라운드에서 서버 최신 데이터 가져오기
     originX=0; originY=0;
     applyTransform();
   }
+  window.reinitMap = initScale;
 
   // fullview 탭 열릴 때 초기화
   const origRenderFullView = window.renderFullView;
