@@ -322,34 +322,36 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   height:28mm;overflow:hidden;background:#fff;
   -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
 }
-/* 1: 위치 정사각형 (소재색 바탕) */
+/* 1: 위치 정사각형 */
 .pq-print-area .pq-label-loc{
   width:28mm;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:#f5f3f0;border-right:1px solid #ddd;
   font-family:Consolas,'Courier New',monospace;font-size:16pt;font-weight:900;
-  letter-spacing:0.5px;
-  -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+  color:#111;letter-spacing:0.5px;
 }
-/* 중: QR 정사각형 */
+/* 2: QR 정사각형 */
 .pq-print-area .pq-label-qr{
   width:28mm;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  padding:2mm;border-left:1px solid #ddd;border-right:1px solid #ddd;
-  background:#fff;
+  padding:2mm;border-right:1px solid #ddd;background:#fff;
 }
 .pq-print-area .pq-label-qr img,.pq-print-area .pq-label-qr canvas{width:22mm!important;height:22mm!important}
-/* 우: 치수+소재 (소재색 바탕) */
+/* 3: 치수+소재 */
 .pq-print-area .pq-label-info{
   flex:1;display:flex;flex-direction:column;justify-content:center;
-  padding:2mm 4mm;color:#fff;min-width:0;
-  -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+  padding:2mm 4mm;min-width:0;
 }
 .pq-print-area .pq-label-item{
   font-family:Consolas,'Courier New',monospace;font-size:16pt;font-weight:900;
-  color:#fff;white-space:nowrap;line-height:1.2;
-  text-shadow:0 1px 2px rgba(0,0,0,.3);
+  color:#111;white-space:nowrap;line-height:1.2;
 }
 .pq-print-area .pq-label-mat{
   font-family:Consolas,monospace;font-size:13pt;font-weight:800;
-  margin-top:1.5mm;opacity:.9;
+  color:#555;margin-top:1.5mm;
+}
+/* 오른쪽 끝: 소재 색상 바 */
+.pq-print-area .pq-label-cb{
+  width:6mm;flex-shrink:0;
+  -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
 }
 
 /* ── 인쇄 탭 모드전환 ── */
@@ -3155,24 +3157,19 @@ function printQueue(){
   const area=document.getElementById('pqPrintArea');
   const printAreaOld=document.getElementById('printArea');
   const baseUrl=location.origin+location.pathname;
-  // 라벨용 색상 (밝은톤)
   const LBL_COLORS={CN10:'#d4a017',CN20:'#4b5563',RS40:'#7dd3e8',RS20:'#9ca3af',CM20:'#c4956a'};
-  // 1번(위치) 글씨색: 밝은 배경은 검은글씨
-  const LBL_TEXT={CN10:'#fff',CN20:'#fff',RS40:'#1a3a4a',RS20:'#fff',CM20:'#fff'};
   let h='';
   q.forEach(function(x,i){
     const mc=LBL_COLORS[x.mat]||'#b0b8c4';
-    const tc=LBL_TEXT[x.mat]||'#fff';
     h+='<div class="pq-label">';
-    // 1: 위치 정사각형 (소재색 바탕)
-    h+='<div class="pq-label-loc" style="background:'+mc+';color:'+tc+'">'+x.loc+'</div>';
-    // 2: QR 정사각형
+    h+='<div class="pq-label-loc">'+x.loc+'</div>';
     h+='<div class="pq-label-qr" id="pqlQr'+i+'"></div>';
-    // 3: 치수+소재 (소재색 바탕)
-    h+='<div class="pq-label-info" style="background:'+mc+';color:'+tc+'">';
+    h+='<div class="pq-label-info">';
     h+='<div class="pq-label-item">'+(x.item||'-')+'</div>';
-    if(x.mat) h+='<div class="pq-label-mat" style="color:'+tc+'">'+x.mat+'</div>';
-    h+='</div></div>';
+    if(x.mat) h+='<div class="pq-label-mat">'+x.mat+'</div>';
+    h+='</div>';
+    h+='<div class="pq-label-cb" style="background:'+mc+'"></div>';
+    h+='</div>';
   });
   area.innerHTML=h;
   // QR 생성
