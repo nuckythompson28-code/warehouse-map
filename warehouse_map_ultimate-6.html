@@ -160,17 +160,44 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 
 /* ── 전체뷰 ── */
 #panel-full{overflow:hidden;position:relative;}
-.full-warehouse{
-  display:flex;flex-direction:column;gap:20px;
-  padding:16px 20px;min-width:max-content;
+.full-warehouse{padding:12px;min-width:max-content;}
+
+/* 창고 그리드 레이아웃 */
+.wh-grid{
+  display:grid;
+  grid-template-columns:
+    minmax(50px,auto) /* 1: T/U */
+    8px               /* 2: gap */
+    minmax(50px,auto) /* 3: S */
+    minmax(50px,auto) /* 4: R */
+    8px               /* 5: gap */
+    minmax(50px,auto) /* 6: Q */
+    8px               /* 7: gap */
+    minmax(50px,auto) /* 8: V/W/X */
+    minmax(40px,auto) /* 9: AA/BB/Y */
+    12px              /* 10: gap */
+    1fr;              /* 11: main racks */
+  grid-template-rows:repeat(24,auto);
+  gap:4px 0;
+  align-items:stretch;
 }
-.full-aisle{display:flex;flex-direction:column;gap:4px}
-.full-aisle-label{
-  font-family:'IBM Plex Mono';font-size:11px;font-weight:700;color:var(--muted);
-  display:flex;align-items:center;gap:10px;padding:6px 0;
-  letter-spacing:.5px;text-transform:uppercase;
+.wh-aisle{
+  font-family:'IBM Plex Mono';font-size:10px;font-weight:700;color:var(--muted);
+  display:flex;align-items:center;gap:8px;padding:4px 0;
+  letter-spacing:.5px;
 }
-.full-aisle-label::before,.full-aisle-label::after{content:"";flex:1;height:1px;background:var(--border)}
+.wh-aisle::before,.wh-aisle::after{content:"";flex:1;height:1px;background:var(--border)}
+.wh-placeholder{
+  background:#fff;border:2px dashed #d5cfc6;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  min-height:40px;padding:8px 4px;
+  font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:#b0a89e;
+  writing-mode:horizontal-tb;
+}
+.wh-placeholder.vertical{
+  writing-mode:vertical-rl;text-orientation:mixed;
+  min-width:36px;padding:12px 4px;
+}
 .full-pair{display:flex;flex-direction:column;gap:3px}
 .full-section{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 8px;box-shadow:var(--shadow)}
 .full-sec-hd{
@@ -651,7 +678,9 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   .full-floor-lbl { font-size: 9px!important; min-width: 20px!important; }
   
   /* 통로 레이블 */
-  .full-aisle-label { font-size: 10px!important; padding: 4px 0!important; }
+  .wh-aisle { font-size: 9px!important; padding: 3px 0!important; }
+  .wh-grid { gap: 3px 0!important; }
+  .wh-placeholder { font-size: 11px!important; min-width: 36px!important; }
   
   /* 테이블 뷰 */
   .wh-table-wrap { padding: 0 4px 80px; }
@@ -2514,6 +2543,7 @@ function renderFullView(){
   const wrap=document.getElementById('fullWarehouse');
   wrap.innerHTML='';
   const sections=[...new Set(data.map(d=>d.section))].sort();
+  const secSet=new Set(sections);
 
   function makeSecBlock(sec){
     const even=isEven(sec);
@@ -2532,19 +2562,6 @@ function renderFullView(){
       ${hld?`<span style="background:rgba(217,119,6,.12);color:#92400e;padding:1px 6px;border-radius:6px;font-size:9px">⏸ ${hld}</span>`:''}`;
     secDiv.appendChild(hd);
 
-    // Q, R 섹션: 2개씩 줄바꿈 (층 레이블 없음)
-    if(sec==='Q'||sec==='R'){
-      const allSlots=sd.sort((a,b)=>a.order-b.order);
-      const gridWrap=document.createElement('div');
-      gridWrap.style.cssText='display:flex;flex-direction:column;gap:4px;padding:4px 0';
-      for(let i=0;i<allSlots.length;i+=2){
-        const rowEl=document.createElement('div');
-        rowEl.style.cssText='display:flex;gap:4px';
-        allSlots.slice(i,i+2).forEach(d=>rowEl.appendChild(makeSlotEl(d)));
-        gridWrap.appendChild(rowEl);
-      }
-      secDiv.appendChild(gridWrap);
-    } else {
     floors.forEach(floor=>{
       const fd=sd.filter(d=>d.floor===floor).sort((a,b)=>a.order-b.order);
       const floorRow=document.createElement('div');
@@ -2581,93 +2598,81 @@ function renderFullView(){
       floorRow.appendChild(slotsWrap);
       secDiv.appendChild(floorRow);
     });
-    } // end Q/R else
     return secDiv;
   }
 
-  // 실제 물리 배치:
-  // [S(90°)] [Q] [A]
-  //          통로1
-  //          [R] [B]
-  //              통로2
-  //              [C] ...
-
-  const secSet = new Set(sections);
-  const specialSet = new Set(['Q','R','S','T','U','V','W','X']);
-  const mainSecs = sections.filter(s=>!specialSet.has(s));
-
-  function mkAisle(num){
-    const d=document.createElement('div');
-    d.className='full-aisle-label';
-    d.textContent=`통로 ${num}`;
-    return d;
-  }
-  function mkGap(){
-    const d=document.createElement('div');
-    d.style.cssText='height:8px;border-top:1px dashed var(--border);margin:4px 0';
-    return d;
-  }
-
-  // ── 메인 컬럼 (A, B, C...) ──
-  const mainCol = document.createElement('div');
-  mainCol.style.cssText='display:flex;flex-direction:column;gap:0;flex:1';
-  for(let i=0;i<mainSecs.length;i+=2){
-    if(i>0) mainCol.appendChild(mkGap());
-    mainCol.appendChild(makeSecBlock(mainSecs[i]));
-    mainCol.appendChild(mkAisle(Math.floor(i/2)+1));
-    if(mainSecs[i+1]) mainCol.appendChild(makeSecBlock(mainSecs[i+1]));
-  }
-
-  // ── QR 컬럼: Q는 A에 딱붙고, 통로, R은 B에 딱붙음 ──
-  const qrCol = document.createElement('div');
-  qrCol.style.cssText='display:flex;flex-direction:column;gap:0;flex-shrink:0';
-
-  function makeSecBlockInline(sec){
-    // 카드 박스 없이 슬롯만 — Q/R용
-    const div = document.createElement('div');
-    div.style.cssText='display:flex;flex-direction:column;gap:4px;padding:10px 0';
-    const hd = document.createElement('div');
-    hd.className='full-sec-hd';
-    const sd2 = data.filter(d=>d.section===sec);
-    const act2 = sd2.filter(d=>getSlotState(d)==='IN').length;
-    hd.innerHTML=`섹션 ${sec} <span style="background:rgba(5,150,105,.12);color:#065f46;padding:1px 6px;border-radius:6px;font-size:9px">✅ ${act2}</span>`;
-    div.appendChild(hd);
-    const allSlots=sd2.sort((a,b)=>a.order-b.order);
-    for(let i=0;i<allSlots.length;i+=2){
-      const row=document.createElement('div');
-      row.style.cssText='display:flex;gap:4px';
-      allSlots.slice(i,i+2).forEach(d=>{
-        const el=makeSlotEl(d);
-        el.style.border='2px solid #fff';
-        row.appendChild(el);
-      });
-      div.appendChild(row);
-    }
+  function makePlaceholder(name, vertical){
+    const div=document.createElement('div');
+    div.className='wh-placeholder'+(vertical?' vertical':'');
+    div.innerHTML=`<span>${name}</span>`;
     return div;
   }
 
-  if(secSet.has('Q')) qrCol.appendChild(makeSecBlockInline('Q'));
-  qrCol.appendChild(mkAisle(''));
-  if(secSet.has('R')) qrCol.appendChild(makeSecBlockInline('R'));
-
-  // ── S 컬럼: 일반 섹션과 동일하게 층별 렌더 ──
-  const sCol = document.createElement('div');
-  sCol.style.cssText='display:flex;flex-direction:column;flex-shrink:0;gap:0';
-
-  if(secSet.has('S')){
-    sCol.appendChild(makeSecBlock('S'));
+  function placeEl(el, col, rowStart, rowEnd){
+    el.style.gridColumn=String(col);
+    el.style.gridRow=rowStart+(rowEnd?(' / '+(rowEnd+1)):'');
   }
-  ['T','U','V','W','X'].forEach(s=>{
-    if(secSet.has(s)) sCol.appendChild(makeSecBlock(s));
+
+  // ── 그리드 컨테이너 ──
+  const grid=document.createElement('div');
+  grid.className='wh-grid';
+
+  // 행 매핑: 섹션 → 그리드 row 번호
+  // A(1) aisle(2) B(3) C(4) aisle(5) D(6) E(7) aisle(8)
+  // F(9) G(10) aisle(11) H(12) I(13) aisle(14)
+  // J(15) K(16) aisle(17) L(18) M(19) aisle(20)
+  // N(21) O(22) aisle(23) P(24)
+  const ROW={A:1,B:3,C:4,D:6,E:7,F:9,G:10,H:12,I:13,J:15,K:16,L:18,M:19,N:21,O:22,P:24};
+  const AISLE_ROWS=[2,5,8,11,14,17,20,23];
+
+  // ── 메인 랙 A~P (col 11) ──
+  'ABCDEFGHIJKLMNOP'.split('').forEach(sec=>{
+    if(!secSet.has(sec)) return;
+    const block=makeSecBlock(sec);
+    placeEl(block,11,ROW[sec]);
+    grid.appendChild(block);
   });
 
-  // ── 전체: [S] [QR] [메인] ──
-  const outerRow = document.createElement('div');
-  outerRow.style.cssText='display:flex;gap:8px;align-items:flex-start';
-  outerRow.appendChild(sCol);
-  outerRow.appendChild(qrCol);
-  outerRow.appendChild(mainCol);
-  wrap.appendChild(outerRow);
+  // ── 통로 (col 11) ──
+  AISLE_ROWS.forEach((r,i)=>{
+    const a=document.createElement('div');
+    a.className='wh-aisle';
+    a.textContent='통로 '+(i+1);
+    placeEl(a,11,r);
+    grid.appendChild(a);
+  });
+
+  // ── 좌측/중앙 섹션 (플레이스홀더 or 실제) ──
+  function placeSec(name, col, r1, r2, vertical){
+    const block=secSet.has(name)?makeSecBlock(name):makePlaceholder(name, vertical);
+    placeEl(block, col, r1, r2);
+    grid.appendChild(block);
+  }
+
+  // V: col 8, rows 1-5 (A~aisle2 구간, 세로 선반)
+  placeSec('V', 8, 1, 5, true);
+  // W: col 8, rows 6-10 (D~G 구간, 세로 선반)
+  placeSec('W', 8, 6, 10, true);
+  // U: col 1, rows 15-17 (J~aisle6 구간)
+  placeSec('U', 1, 15, 17, true);
+  // T: col 1, rows 18-24 (L~P 구간)
+  placeSec('T', 1, 18, 24, true);
+  // S: col 3, rows 18-24
+  placeSec('S', 3, 18, 24, true);
+  // R: col 4, rows 18-24
+  placeSec('R', 4, 18, 24, true);
+  // Q: col 6, rows 18-24
+  placeSec('Q', 6, 18, 24, true);
+  // X: col 8, rows 18-24
+  placeSec('X', 8, 18, 24, true);
+  // AA: col 9, row 1 (A 옆)
+  placeSec('AA', 9, 1, 1, false);
+  // BB: col 9, rows 6-7 (D/E 옆)
+  placeSec('BB', 9, 6, 7, false);
+  // Y: col 9, rows 23-24 (P 옆)
+  placeSec('Y', 9, 23, 24, false);
+
+  wrap.appendChild(grid);
 }
 
 
