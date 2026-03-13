@@ -319,7 +319,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   display:inline-flex;align-items:stretch;
   border:1.5px solid #555;border-radius:3px;
   margin:1mm;page-break-inside:avoid;
-  height:28mm;overflow:hidden;background:#fff;
+  width:112mm;height:28mm;overflow:hidden;background:#fff;
   -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
 }
 /* 1: 위치 정사각형 */
@@ -335,10 +335,10 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   padding:2mm;border-right:1px solid #ddd;background:#fff;
 }
 .pq-print-area .pq-label-qr img,.pq-print-area .pq-label-qr canvas{width:22mm!important;height:22mm!important}
-/* 3: 치수+소재 */
+/* 3: 치수+소재 (50mm 고정) */
 .pq-print-area .pq-label-info{
-  flex:1;display:flex;flex-direction:column;justify-content:center;
-  padding:2mm 4mm;min-width:0;
+  width:50mm;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;
+  padding:2mm 4mm;
 }
 .pq-print-area .pq-label-item{
   font-family:Consolas,'Courier New',monospace;font-size:16pt;font-weight:900;
