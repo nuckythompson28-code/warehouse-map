@@ -17,7 +17,7 @@
   --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
   --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
   --반박스:#6366f1;--풀박스:#9333ea;--흰색:#64748b;--노란색:#d97706;--초소형:#0891b2;--서랍:#db2777;
-  --CN10:#fde68a;--CN20:#374151;--RS40:#0d9488;--RS20:#6b7280;--CM20:#d1d5db;
+  --CN10:#facc15;--CN20:#374151;--RS40:#0d9488;--RS20:#6b7280;--CM20:#d1d5db;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -212,7 +212,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot.초소형{width:36px;height:48px}
 
 /* 소재 있으면 소재색 */
-.slot.mat-CN10{background:#fde68a!important;border-color:#fcd34d!important;color:#78350f!important}
+.slot.mat-CN10{background:#facc15!important;border-color:#fcd34d!important;color:#78350f!important}
 .slot.mat-CN20{background:#374151!important;border-color:#1f2937!important;color:#fff!important}
 .slot.mat-RS40{background:#7dd3e8!important;border-color:#5bb8cc!important;color:#1a3a4a!important}
 .slot.mat-RS20{background:#9ca3af!important;border-color:#6b7280!important;color:#fff!important}
@@ -2144,7 +2144,7 @@ function renderSearchResults(){
         <div class="result-loc">
           <div class="result-path">${locPath}</div>
           ${d.item?`<div class="result-item">📦 ${d.item}${d.qty!==''?' · '+d.qty+'개':''}</div>`:'<div class="result-item" style="color:var(--muted)">품목 미등록</div>'}
-          ${d.material?`<div style="font-size:11px;font-family:IBM Plex Mono;margin-top:2px"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${'CN10'===d.material?'#fde68a':'CN20'===d.material?'#374151':'RS40'===d.material?'#0d9488':'RS20'===d.material?'#6b7280':'#a07850'};margin-right:4px;vertical-align:middle"></span>${d.material}</div>`:'' }
+          ${d.material?`<div style="font-size:11px;font-family:IBM Plex Mono;margin-top:2px"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${'CN10'===d.material?'#facc15':'CN20'===d.material?'#374151':'RS40'===d.material?'#0d9488':'RS20'===d.material?'#6b7280':'#a07850'};margin-right:4px;vertical-align:middle"></span>${d.material}</div>`:'' }
           ${d.material?`<div class="result-item" style="color:#94a3b8">🧵 ${d.material}</div>`:''}
           <div class="result-meta">
             <span style="color:${typeColor}">■ ${d.type||'유형미지정'}</span>
@@ -2335,7 +2335,7 @@ function renderDetail(sec){
   const legend=document.createElement('div');
   legend.className='material-legend';
   const MATS=[
-    ['CN10','#fde68a','연노란색'],['CN20','#374151','검은색'],
+    ['CN10','#facc15','연노란색'],['CN20','#374151','검은색'],
     ['RS40','#0d9488','청록색'],['RS20','#6b7280','회색'],['CM20','#d1d5db','라이트그레이']
   ];
   legend.innerHTML=MATS.map(([name,color,label])=>
@@ -2593,7 +2593,7 @@ function renderFullView(){
   //              [C] ...
 
   const secSet = new Set(sections);
-  const specialSet = new Set(['Q','R','S']);
+  const specialSet = new Set(['Q','R','S','T','U','V','W','X']);
   const mainSecs = sections.filter(s=>!specialSet.has(s));
 
   function mkAisle(num){
@@ -2636,7 +2636,11 @@ function renderFullView(){
     for(let i=0;i<allSlots.length;i+=2){
       const row=document.createElement('div');
       row.style.cssText='display:flex;gap:4px';
-      allSlots.slice(i,i+2).forEach(d=>row.appendChild(makeSlotEl(d)));
+      allSlots.slice(i,i+2).forEach(d=>{
+        const el=makeSlotEl(d);
+        el.style.border='2px solid #fff';
+        row.appendChild(el);
+      });
       div.appendChild(row);
     }
     return div;
@@ -2653,6 +2657,9 @@ function renderFullView(){
   if(secSet.has('S')){
     sCol.appendChild(makeSecBlock('S'));
   }
+  ['T','U','V','W','X'].forEach(s=>{
+    if(secSet.has(s)) sCol.appendChild(makeSecBlock(s));
+  });
 
   // ── 전체: [S] [QR] [메인] ──
   const outerRow = document.createElement('div');
@@ -2749,7 +2756,7 @@ function renderFilteredResults(){
     const card = document.createElement('div');
     card.className = 'result-card';
     const slotId = `${d.section}${d.floor}-${d.order}`;
-    const matColor = {'CN10':'#fde68a','CN20':'#374151','RS40':'#0d9488','RS20':'#6b7280','CM20':'#d1d5db'}[d.material] || null;
+    const matColor = {'CN10':'#facc15','CN20':'#374151','RS40':'#0d9488','RS20':'#6b7280','CM20':'#d1d5db'}[d.material] || null;
     const isEmpty = !d.item && !d.qty;
     card.innerHTML = `
       <div class="result-loc">
@@ -2912,7 +2919,7 @@ let tblSortKey = 'loc';
 let tblSortAsc = true;
 let selectedIds = new Set();
 
-const MAT_COLORS = {CN10:'#fde68a',CN20:'#374151',RS40:'#0d9488',RS20:'#6b7280',CM20:'#d1d5db'};
+const MAT_COLORS = {CN10:'#facc15',CN20:'#374151',RS40:'#0d9488',RS20:'#6b7280',CM20:'#d1d5db'};
 const STATE_COLORS = {IN:'#059669',EMPTY:'#64748b',UNUSED:'#94a3b8'};
 
 function renderTable(){
@@ -3033,7 +3040,7 @@ function printSelected(){
     const stateColor = STATE_COLORS[state]||'#94a3b8';
 
     const bgColor = d.material ? (
-      d.material==='CN10'?'#fde68a':
+      d.material==='CN10'?'#facc15':
       d.material==='CN20'?'#d1d5db':
       d.material==='RS40'?'#99f6e4':
       d.material==='RS20'?'#e5e7eb':
@@ -3161,7 +3168,7 @@ function printQueue(){
   const area=document.getElementById('pqPrintArea');
   const printAreaOld=document.getElementById('printArea');
   const baseUrl=location.origin+location.pathname;
-  const LBL_COLORS={CN10:'#fde68a',CN20:'#4b5563',RS40:'#7dd3e8',RS20:'#9ca3af',CM20:'#d1d5db'};
+  const LBL_COLORS={CN10:'#facc15',CN20:'#4b5563',RS40:'#7dd3e8',RS20:'#9ca3af',CM20:'#d1d5db'};
   let h='';
   q.forEach(function(x,i){
     const mc=LBL_COLORS[x.mat]||'#b0b8c4';
