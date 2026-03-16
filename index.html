@@ -276,7 +276,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot-tip{
   display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
   background:#1c1917;color:#fff;font-size:11px;padding:6px 10px;border-radius:8px;
-  white-space:nowrap;z-index:50;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2);
+  white-space:nowrap;z-index:50;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2);text-align:left;line-height:1.6;
   font-family:'IBM Plex Mono';
 }
 .slot-tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1c1917}
@@ -2504,10 +2504,11 @@ function makeSlotEl(d){
   if(d.material) inner+=`<span class="slot-material">${d.material}</span>`;
 
   // 호버 툴팁
-  let tip=slotId;
-  if(d.item) tip+=` | ${d.item}`;
-  if(d.material) tip+=` | ${d.material}`;
-  if(d.type) tip+=` | ${d.type}`;
+  let tip=`<b>${slotId}</b>`;
+  if(d.item) tip+=`<br>치수: ${d.item}`;
+  if(d.material) tip+=`<br>소재: ${d.material}`;
+  if(d.type) tip+=`<br>타입: ${d.type}`;
+  if(d.qty) tip+=`<br>수량: ${d.qty}`;
   inner+=`<div class="slot-tip">${tip}</div>`;
 
   slot.innerHTML=inner;
