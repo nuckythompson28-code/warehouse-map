@@ -229,7 +229,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);
   width:18px;flex-shrink:0;padding-top:14px;text-align:right;
 }
-.full-slots{display:flex;gap:3px;align-items:center;flex-wrap:nowrap}
+.full-slots{display:flex;gap:3px;align-items:flex-start;flex-wrap:nowrap}
 .full-slots.mirrored{flex-direction:row-reverse}
 
 /* ── 슬롯 렌더링 ── */
@@ -2478,7 +2478,7 @@ function renderDetail(sec){
 
         arranged.forEach(gd=>{
           if(gd){zg.appendChild(makeSlotEl(gd));}
-          else{const em=document.createElement('div');em.style.cssText=`width:${cellW}px;height:48px;`;zg.appendChild(em);}
+          else{const em=document.createElement('div');em.style.cssText=`width:${cellW}px;`;zg.appendChild(em);}
         });
         row.appendChild(zg);i=j;
       }else{
@@ -2757,7 +2757,7 @@ function makeSecBlockFull(sec){
         else{arranged=[group[0]||null,group[1]||null,group[2]||null,group[3]||null];}
         arranged.forEach(gd=>{
           if(gd){zg.appendChild(makeSlotEl(gd));}
-          else{const em=document.createElement('div');em.style.cssText=`width:${cellW}px;height:48px;`;zg.appendChild(em);}
+          else{const em=document.createElement('div');em.style.cssText=`width:${cellW}px;`;zg.appendChild(em);}
         });
         slotsWrap.appendChild(zg);i=j;
       }else{
