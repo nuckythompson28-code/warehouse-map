@@ -679,7 +679,8 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   .slot { width: 80px!important; min-width: 80px!important; max-width: 80px!important; height: 90px!important; font-size: 9px!important; }
   .slot.has-item { width: 80px!important; min-width: 80px!important; max-width: 80px!important; }
   .slot.풀박스 { width: 163px!important; min-width: 163px!important; max-width: 163px!important; }
-  .zgroup { grid-template-columns: 80px 80px!important; grid-template-rows: 46px 46px!important; height: 95px!important; }
+  .zgroup { grid-template-columns: 80px 80px!important; grid-template-rows: 44px 44px!important; height: auto!important; }
+  .zgroup .slot { height: 44px!important; }
   .slot-id { font-size: 10px!important; }
   .slot-item { font-size: 8px!important; -webkit-line-clamp: 2; }
   .slot-material { font-size: 10px!important; }
@@ -704,7 +705,8 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 @media (max-width: 480px) {
   .slot { width: 65px!important; min-width: 65px!important; max-width: 65px!important; height: 75px!important; font-size: 8px!important; gap: 1px!important; }
   .slot.has-item { width: 65px!important; min-width: 65px!important; max-width: 65px!important; }
-  .zgroup { grid-template-columns: 65px 65px!important; grid-template-rows: 38px 38px!important; height: 79px!important; }
+  .zgroup { grid-template-columns: 65px 65px!important; grid-template-rows: 36px 36px!important; height: auto!important; }
+  .zgroup .slot { height: 36px!important; }
 }
 
 @media print{
@@ -3610,29 +3612,26 @@ loadFromSheet(); // 백그라운드에서 서버 최신 데이터 가져오기
     if(slot) hideTip();
   });
 
-  // 모바일: long-press (300ms)
+  // 모바일: tap으로 툴팁 표시
+  let touchMoved=false;
   document.addEventListener('touchstart', e=>{
     const slot=e.target.closest('.slot');
-    if(!slot) return;
-    clearTimeout(longPressTimer);
+    if(!slot){ hideTip(); return; }
+    touchMoved=false;
     activeTouchSlot=slot;
-    longPressTimer=setTimeout(()=>{
-      if(!activeTouchSlot) return;
-      const touch=e.touches[0];
-      const rect=slot.getBoundingClientRect();
-      showTip(slot, rect.left+rect.width/2, rect.top);
-    }, 300);
-  },{passive:true});
-
-  document.addEventListener('touchend', ()=>{
-    clearTimeout(longPressTimer);
-    setTimeout(hideTip, 1500); // 1.5초 후 자동 숨김
   },{passive:true});
 
   document.addEventListener('touchmove', ()=>{
+    touchMoved=true;
+  },{passive:true});
+
+  document.addEventListener('touchend', e=>{
+    if(touchMoved || !activeTouchSlot) return;
+    const slot=activeTouchSlot;
+    const rect=slot.getBoundingClientRect();
+    showTip(slot, rect.left+rect.width/2, rect.top);
     clearTimeout(longPressTimer);
-    activeTouchSlot=null;
-    hideTip();
+    longPressTimer=setTimeout(hideTip, 2500);
   },{passive:true});
 })();
 </script>
