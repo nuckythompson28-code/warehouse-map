@@ -245,7 +245,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   font-family:'IBM Plex Mono';font-size:9px;font-weight:700;cursor:pointer;position:relative;
   border:1.5px solid transparent;flex-shrink:0;transition:all .08s;gap:1px;padding:2px;
 }
-.slot:hover{transform:scale(1.15);z-index:40;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.slot:hover{z-index:40;box-shadow:0 3px 10px rgba(0,0,0,.18);outline:2px solid var(--accent)}
 .slot.dim{opacity:.1}
 .slot.UNUSED{opacity:.2;filter:grayscale(.7)}
 .slot.IN::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 0 1.5px rgba(16,185,129,.25)}
@@ -272,15 +272,14 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot-loc{display:none}
 .slot-order{display:none}
 
-/* 툴팁 */
-.slot-tip{
-  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-  background:#1c1917;color:#fff;font-size:11px;padding:6px 10px;border-radius:8px;
-  white-space:nowrap;z-index:50;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2);text-align:left;line-height:1.6;
+/* 툴팁 - JS로 제어 */
+#slotTooltip{
+  display:none;position:fixed;
+  background:#1c1917;color:#fff;font-size:11px;padding:8px 12px;border-radius:8px;
+  white-space:nowrap;z-index:9999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:left;line-height:1.6;
   font-family:'IBM Plex Mono';
 }
-.slot-tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1c1917}
-.slot:hover .slot-tip{display:block}
+.slot-tip{display:none!important}
 
 /* ── 소재 범례 ── */
 .material-legend{
@@ -3556,15 +3555,86 @@ loadFromSheet(); // 백그라운드에서 서버 최신 데이터 가져오기
     applyTransform();
   },{passive:false});
 
-  // 더블탭 = 100% 리셋
-  let lastTap=0;
+  // 더블탭 = 100% 리셋 (핀치줌 후 오인식 방지)
+  let lastTap=0, wasPinch=false;
+  viewport.addEventListener('touchstart', e=>{
+    if(e.touches.length>=2) wasPinch=true;
+  },{passive:true});
   viewport.addEventListener('touchend', e=>{
-    const now=Date.now();
-    if(now-lastTap<300){ initScale(); }
-    lastTap=now;
+    if(e.touches.length===0){
+      if(wasPinch){ wasPinch=false; lastTap=0; return; }
+      const now=Date.now();
+      if(now-lastTap<300){ initScale(); }
+      lastTap=now;
+    }
   },{passive:true});
 })();
 </script>
 
+<div id="slotTooltip"></div>
+<script>
+/* ── 전역 슬롯 툴팁 (PC hover + 모바일 long-press) ── */
+(function(){
+  const tip=document.getElementById('slotTooltip');
+  let longPressTimer=null, activeTouchSlot=null;
+
+  function showTip(slot, x, y){
+    const inner=slot.querySelector('.slot-tip');
+    if(!inner) return;
+    tip.innerHTML=inner.innerHTML;
+    tip.style.display='block';
+    // 위치 계산: 슬롯 위에 표시, 화면 밖 나가면 조정
+    const tw=tip.offsetWidth, th=tip.offsetHeight;
+    let left=x-tw/2, top=y-th-12;
+    if(left<4) left=4;
+    if(left+tw>window.innerWidth-4) left=window.innerWidth-tw-4;
+    if(top<4) top=y+20; // 위에 공간 없으면 아래로
+    tip.style.left=left+'px';
+    tip.style.top=top+'px';
+  }
+
+  function hideTip(){
+    tip.style.display='none';
+    activeTouchSlot=null;
+  }
+
+  // PC: mouseover/mouseout
+  document.addEventListener('mouseover', e=>{
+    const slot=e.target.closest('.slot');
+    if(!slot) return;
+    const rect=slot.getBoundingClientRect();
+    showTip(slot, rect.left+rect.width/2, rect.top);
+  });
+  document.addEventListener('mouseout', e=>{
+    const slot=e.target.closest('.slot');
+    if(slot) hideTip();
+  });
+
+  // 모바일: long-press (300ms)
+  document.addEventListener('touchstart', e=>{
+    const slot=e.target.closest('.slot');
+    if(!slot) return;
+    clearTimeout(longPressTimer);
+    activeTouchSlot=slot;
+    longPressTimer=setTimeout(()=>{
+      if(!activeTouchSlot) return;
+      const touch=e.touches[0];
+      const rect=slot.getBoundingClientRect();
+      showTip(slot, rect.left+rect.width/2, rect.top);
+    }, 300);
+  },{passive:true});
+
+  document.addEventListener('touchend', ()=>{
+    clearTimeout(longPressTimer);
+    setTimeout(hideTip, 1500); // 1.5초 후 자동 숨김
+  },{passive:true});
+
+  document.addEventListener('touchmove', ()=>{
+    clearTimeout(longPressTimer);
+    activeTouchSlot=null;
+    hideTip();
+  },{passive:true});
+})();
+</script>
 </body>
 </html>
