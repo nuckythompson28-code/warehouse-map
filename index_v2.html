@@ -2725,6 +2725,9 @@ function closeSlotPopup(){
   popupKey=null;
   popupEditingIdx=null;
 }
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeSlotPopup();
+});
 
 function renderPopupCards(){
   const container=document.getElementById('popupCards');
