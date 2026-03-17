@@ -1017,7 +1017,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   <div class="tabbar-item" id="tab-queue" onclick="switchTab('queue')">
     <div class="tabbar-icon">🏷</div>인쇄<span class="pq-badge" id="pqBadge" style="display:none;background:#dc2626;color:#fff;font-size:9px;border-radius:8px;padding:0 5px;margin-left:2px;font-weight:700"></span>
   </div>
-  <div class="tabbar-item" id="tab-back" onclick="history.back()">
+  <div class="tabbar-item" id="tab-back" onclick="goBackTab()">
     <div class="tabbar-icon">↩</div>뒤로
   </div>
 </div>
@@ -2238,7 +2238,19 @@ function goBack(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('panel-'+(prevTab||'full')).classList.add('on');
   if((prevTab||'full')==='full')renderFullView();
-  if((prevTab||'map')==='table')renderTable();
+  if(prevTab==='table')renderTable();
+}
+
+function goBackTab(){
+  // 그룹 상세뷰면 전체뷰로, 아니면 이전 탭으로
+  if(fullViewGroup){
+    fullViewGroup=null;
+    switchTab('full');
+  } else if(currentTab==='table'||currentTab==='queue'){
+    switchTab('full');
+  } else {
+    switchTab('full');
+  }
 }
 
 /* ── 검색 / 필터 ── */
