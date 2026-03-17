@@ -165,26 +165,26 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .full-warehouse{padding:12px;min-width:max-content;}
 
 /* 그룹 지도 개요 - 통합 레이아웃 */
-.wh-map{display:flex;justify-content:center;align-items:center;height:100%;padding:8px}
+.wh-map{display:flex;justify-content:center;align-items:flex-start;height:100%;padding:6px;overflow-y:auto}
 .wh-map-grid{
   display:grid;
   grid-template-columns:repeat(18,1fr);
-  grid-template-rows:repeat(22,1fr);
-  gap:2px;
-  width:100%;max-width:600px;height:100%;max-height:calc(100vh - 180px);
+  grid-template-rows:repeat(22,minmax(0,1fr));
+  gap:3px;
+  width:100%;max-width:800px;aspect-ratio:18/22;
 }
 .wh-map-cell{
-  border-radius:3px;font-size:8px;font-weight:800;
+  border-radius:4px;font-size:clamp(9px,2.5vw,14px);font-weight:800;
   display:flex;align-items:center;justify-content:center;
   font-family:'IBM Plex Mono';cursor:pointer;transition:all .1s;
-  color:rgba(0,0,0,.5);min-height:0;
+  color:rgba(0,0,0,.55);min-height:0;
 }
 .wh-map-cell:hover{transform:scale(1.1);z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .wh-map-cell.sec-ai{background:#fbbf24;color:#92400e}
 .wh-map-cell.sec-jp{background:#6ee7b7;color:#065f46}
 .wh-map-cell.sec-qu{background:#a5b4fc;color:#3730a3}
 .wh-map-cell.sec-extra{background:#d1d5db;color:#374151}
-.wh-map-cell.sec-empty{background:transparent}
+.wh-map-cell.sec-empty{background:transparent;pointer-events:none}
 .wh-group-stats{display:flex;gap:12px;flex-wrap:wrap}
 .wh-group-stat{
   font-family:'IBM Plex Mono';font-size:12px;font-weight:600;
