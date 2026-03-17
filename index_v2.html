@@ -164,28 +164,45 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 #panel-full{overflow:hidden;position:relative;height:calc(100vh - 160px);}
 .full-warehouse{padding:12px;min-width:max-content;}
 
-/* 그룹 카드 개요 */
-.wh-groups{
+/* 그룹 지도 개요 */
+.wh-map{
   display:grid;
   grid-template-columns:auto 1fr;
-  grid-template-rows:auto auto;
-  gap:12px;padding:16px;
+  grid-template-rows:1fr 1fr;
+  gap:8px;padding:12px;height:100%;
 }
-.wh-groups .wh-group-card:nth-child(1){grid-column:2;grid-row:1} /* A~J: 오른쪽 상단 */
-.wh-groups .wh-group-card:nth-child(3){grid-column:1;grid-row:1/3} /* Q~U: 왼쪽 전체 */
-.wh-groups .wh-group-card:nth-child(2){grid-column:2;grid-row:2} /* K~P: 오른쪽 하단 */
-.wh-group-card{
-  background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  padding:20px 24px;cursor:pointer;transition:all .15s;
-  box-shadow:var(--shadow);
+.wh-map-zone{
+  background:var(--surface);border:2px solid var(--border);border-radius:12px;
+  cursor:pointer;transition:all .15s;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
 }
-.wh-group-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.wh-group-card:active{transform:scale(.98)}
-.wh-group-hd{
-  font-family:'IBM Plex Mono';font-size:18px;font-weight:800;color:var(--text);
-  margin-bottom:8px;display:flex;align-items:center;gap:10px;
+.wh-map-zone:hover{box-shadow:var(--shadow-md);border-color:var(--accent)}
+.wh-map-zone:active{transform:scale(.98)}
+.wh-map-zone[data-group="AI"]{grid-column:2;grid-row:1}
+.wh-map-zone[data-group="JP"]{grid-column:2;grid-row:2}
+.wh-map-zone[data-group="QU"]{grid-column:1;grid-row:1/3}
+.wh-map-hd{
+  padding:6px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);
+  font-family:'IBM Plex Mono';font-size:13px;font-weight:800;flex-shrink:0;
 }
-.wh-group-hd .arrow{color:var(--muted);font-size:14px;margin-left:auto}
+.wh-map-hd .arrow{color:var(--muted);font-size:11px;margin-left:auto}
+.wh-map-body{flex:1;display:flex;gap:2px;padding:4px;overflow:hidden;align-items:flex-start}
+.wh-map-col{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.wh-map-row{display:flex;gap:1px}
+.wh-map-cell{
+  min-width:14px;height:14px;border-radius:2px;font-size:5px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:rgba(0,0,0,.4);
+}
+.wh-map-cell.in{background:#fbbf24}
+.wh-map-cell.empty{background:rgba(0,0,0,.06)}
+.wh-map-cell.hold{background:#fdba74}
+.wh-map-cell.stale-cell{background:#fca5a5}
+.wh-map-sec-lbl{font-size:7px;font-weight:800;color:var(--muted);text-align:center;padding:1px 0;font-family:'IBM Plex Mono'}
+.wh-map-extra{display:flex;flex-direction:column;gap:1px;border-left:1px solid var(--border);padding-left:3px;margin-left:2px}
+.wh-map-extra-lbl{font-size:5px;font-weight:700;color:var(--muted);text-align:center}
+.wh-map-stats{
+  padding:4px 10px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;
+}
 .wh-group-stats{display:flex;gap:12px;flex-wrap:wrap}
 .wh-group-stat{
   font-family:'IBM Plex Mono';font-size:12px;font-weight:600;
@@ -2997,7 +3014,7 @@ function renderFullView(){
 
 function renderFullOverview(wrap){
   const container=document.createElement('div');
-  container.className='wh-groups';
+  container.className='wh-map';
 
   WH_GROUPS.forEach(g=>{
     const allSecs=[...g.secs,...(g.extra||[]),...(g.extra1||[]),...(g.extra2||[])];
@@ -3005,31 +3022,111 @@ function renderFullOverview(wrap){
     const total=gd.length;
     const inUse=gd.filter(d=>getSlotState(d)==='IN').length;
     const hold=gd.filter(d=>getSlotState(d)==='EMPTY').length;
-    const empty=total-inUse-hold;
-    const pctIn=total?Math.round(inUse/total*100):0;
-    const pctHold=total?Math.round(hold/total*100):0;
 
-    const card=document.createElement('div');
-    card.className='wh-group-card';
-    card.innerHTML=`
-      <div class="wh-group-hd">
-        <span style="color:${g.color}">${g.label}</span>
-        <span style="font-size:12px;color:var(--muted);font-weight:500">${g.secs.join(', ')}</span>
-        <span class="arrow">&#9654;</span>
-      </div>
-      <div class="wh-group-stats">
-        <span class="wh-group-stat" style="background:rgba(5,150,105,.1);color:#065f46">사용 ${inUse}</span>
-        <span class="wh-group-stat" style="background:rgba(217,119,6,.1);color:#92400e">대기 ${hold}</span>
-        <span class="wh-group-stat" style="background:rgba(0,0,0,.05);color:var(--muted)">빈칸 ${empty}</span>
-        <span class="wh-group-stat" style="background:rgba(0,0,0,.03);color:var(--muted)">전체 ${total}</span>
-      </div>
-      <div class="wh-group-bar">
-        <span style="width:${pctIn}%;background:#10b981"></span>
-        <span style="width:${pctHold}%;background:#d97706"></span>
-      </div>
+    const zone=document.createElement('div');
+    zone.className='wh-map-zone';
+    zone.dataset.group=g.id;
+
+    // 헤더
+    zone.innerHTML=`<div class="wh-map-hd"><span style="color:${g.color}">${g.label}</span>
+      <span style="font-size:9px;color:var(--muted);font-weight:500">사용 ${inUse} / ${total}</span>
+      <span class="arrow">&#9654;</span></div>`;
+
+    // 미니맵 바디
+    const body=document.createElement('div');
+    body.className='wh-map-body';
+
+    // 부속 섹션 (왼쪽)
+    const extras=[...(g.extra1||[]),...(g.extra2||[]),...(g.extra||[])];
+    if(extras.length){
+      const extraCol=document.createElement('div');
+      extraCol.className='wh-map-extra';
+      extras.forEach(sec=>{
+        const sd=data.filter(d=>d.section===sec);
+        if(!sd.length) return;
+        const lbl=document.createElement('div');
+        lbl.className='wh-map-extra-lbl';
+        lbl.textContent=sec;
+        extraCol.appendChild(lbl);
+        const floors=[...new Set(sd.map(d=>d.floor))].sort((a,b)=>b-a);
+        floors.forEach(f=>{
+          const fd=sd.filter(d=>d.floor===f).sort((a,b)=>a.order-b.order);
+          const row=document.createElement('div');
+          row.className='wh-map-row';
+          fd.forEach(d=>{
+            const cell=document.createElement('div');
+            cell.className='wh-map-cell';
+            const st=getSlotState(d);
+            if(st==='IN'){
+              const si=getStaleInfo(d);
+              cell.classList.add(si.stale?'stale-cell':'in');
+            } else if(st==='EMPTY') cell.classList.add('hold');
+            else cell.classList.add('empty');
+            row.appendChild(cell);
+          });
+          extraCol.appendChild(row);
+        });
+      });
+      body.appendChild(extraCol);
+    }
+
+    // 메인 섹션
+    const mainWrap=document.createElement('div');
+    mainWrap.style.cssText='display:flex;flex-direction:column;gap:1px;flex:1;overflow:hidden';
+    g.secs.forEach(sec=>{
+      const sd=data.filter(d=>d.section===sec);
+      if(!sd.length) return;
+      const secRow=document.createElement('div');
+      secRow.style.cssText='display:flex;align-items:center;gap:2px';
+      const lbl=document.createElement('div');
+      lbl.className='wh-map-sec-lbl';
+      lbl.style.minWidth='12px';
+      lbl.textContent=sec;
+      secRow.appendChild(lbl);
+
+      const floors=[...new Set(sd.map(d=>d.floor))].sort((a,b)=>b-a);
+      const maxFloor=floors[0]||1;
+      // 1층 기준으로 셀 수 표시 (가장 대표적)
+      const f1=sd.filter(d=>d.floor===1).sort((a,b)=>a.order-b.order);
+      const showData=f1.length?f1:sd.filter(d=>d.floor===floors[0]).sort((a,b)=>a.order-b.order);
+      const row=document.createElement('div');
+      row.className='wh-map-row';
+      showData.forEach(d=>{
+        const cell=document.createElement('div');
+        cell.className='wh-map-cell';
+        const st=getSlotState(d);
+        if(st==='IN'){
+          const si=getStaleInfo(d);
+          cell.classList.add(si.stale?'stale-cell':'in');
+        } else if(st==='EMPTY') cell.classList.add('hold');
+        else cell.classList.add('empty');
+        row.appendChild(cell);
+      });
+      secRow.appendChild(row);
+
+      // 층 수 표시
+      const floorLbl=document.createElement('div');
+      floorLbl.style.cssText='font-size:5px;color:var(--muted);min-width:10px';
+      floorLbl.textContent=maxFloor+'F';
+      secRow.appendChild(floorLbl);
+
+      mainWrap.appendChild(secRow);
+    });
+    body.appendChild(mainWrap);
+    zone.appendChild(body);
+
+    // 하단 통계 바
+    const stats=document.createElement('div');
+    stats.className='wh-map-stats';
+    stats.innerHTML=`
+      <span class="wh-group-stat" style="background:rgba(5,150,105,.1);color:#065f46;font-size:9px">사용 ${inUse}</span>
+      <span class="wh-group-stat" style="background:rgba(217,119,6,.1);color:#92400e;font-size:9px">대기 ${hold}</span>
+      <span class="wh-group-stat" style="background:rgba(250,50,50,.1);color:#991b1b;font-size:9px">미출고 ${gd.filter(d=>getStaleInfo(d).stale).length}</span>
     `;
-    card.addEventListener('click',()=>{fullViewGroup=g.id;renderFullView();});
-    container.appendChild(card);
+    zone.appendChild(stats);
+
+    zone.addEventListener('click',()=>{fullViewGroup=g.id;renderFullView();});
+    container.appendChild(zone);
   });
   wrap.appendChild(container);
 }
