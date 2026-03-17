@@ -168,23 +168,23 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .wh-map{display:flex;justify-content:center;align-items:flex-start;height:100%;padding:6px;overflow-y:auto}
 .wh-map-grid{
   display:grid;
-  grid-template-columns:repeat(18,1fr);
-  grid-template-rows:repeat(22,minmax(0,1fr));
+  grid-template-columns:repeat(12,1fr);
+  grid-template-rows:repeat(18,1fr);
   gap:3px;
-  width:100%;max-width:800px;aspect-ratio:18/22;
+  width:100%;max-width:500px;aspect-ratio:12/18;
 }
-.wh-map-cell{
-  border-radius:4px;font-size:clamp(9px,2.5vw,14px);font-weight:800;
+.wh-map-block{
+  border-radius:6px;font-size:clamp(11px,3vw,18px);font-weight:800;
   display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono';cursor:pointer;transition:all .1s;
-  color:rgba(0,0,0,.55);min-height:0;
+  font-family:'IBM Plex Mono';cursor:pointer;transition:all .15s;
+  min-height:0;border:1px solid rgba(0,0,0,.08);
 }
-.wh-map-cell:hover{transform:scale(1.1);z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.wh-map-cell.sec-ai{background:#fbbf24;color:#92400e}
-.wh-map-cell.sec-jp{background:#6ee7b7;color:#065f46}
-.wh-map-cell.sec-qu{background:#a5b4fc;color:#3730a3}
-.wh-map-cell.sec-extra{background:#d1d5db;color:#374151}
-.wh-map-cell.sec-empty{background:transparent;pointer-events:none}
+.wh-map-block:hover{filter:brightness(.9);box-shadow:0 2px 10px rgba(0,0,0,.2);z-index:5}
+.wh-map-block:active{transform:scale(.97)}
+.wh-map-block.sec-ai{background:#fbbf24;color:#78350f}
+.wh-map-block.sec-jp{background:#6ee7b7;color:#064e3b}
+.wh-map-block.sec-qu{background:#a5b4fc;color:#312e81}
+.wh-map-block.sec-extra{background:#d1d5db;color:#1f2937}
 .wh-group-stats{display:flex;gap:12px;flex-wrap:wrap}
 .wh-group-stat{
   font-family:'IBM Plex Mono';font-size:12px;font-weight:600;
@@ -3006,81 +3006,64 @@ function renderFullOverview(wrap){
   const grid=document.createElement('div');
   grid.className='wh-map-grid';
 
-  // 물리적 창고 배치도 (행, 열 기반)
-  // 그리드: 18열 x 22행
-  // 각 셀: [섹션명, 그룹ID] 또는 null
-  const layout=[
-    // row 0:          V  .  AA .  A  A  A  A  A  A
-    [null,null,null,null,'V',null,'AA',null,'A','A','A','A','A','A',null,null,null,null],
-    // row 1:          V  .  .  .  B  B  B  B  B  B
-    [null,null,null,null,'V',null,null,null,'B','B','B','B','B','B',null,null,null,null],
-    // row 2:          V  .  .  .  C  C  C  C  C
-    [null,null,null,null,'V',null,null,null,'C','C','C','C','C',null,null,null,null,null],
-    // row 3:          W  .  .  .  D  D  D  D  D  D
-    [null,null,null,null,'W',null,null,null,'D','D','D','D','D','D',null,null,null,null],
-    // row 4:          W  .  BB .  E  E  E  E  E  E
-    [null,null,null,null,'W',null,'BB',null,'E','E','E','E','E','E',null,null,null,null],
-    // row 5:          X  .  .  .  F  F  F  F  F  F
-    [null,null,null,null,'X',null,null,null,'F','F','F','F','F','F',null,null,null,null],
-    // row 6:          X  .  .  .  G  G  G  G  G  G
-    [null,null,null,null,'X',null,null,null,'G','G','G','G','G','G',null,null,null,null],
-    // row 7:          X  .  .  .  .  .  .  .  .  .
-    [null,null,null,null,'X',null,null,null,null,null,null,null,null,null,null,null,null,null],
-    // row 8:          WW .  .  .  H  H  H  H  H  H
-    [null,null,null,null,'WW',null,null,null,'H','H','H','H','H','H',null,null,null,null],
-    // row 9:          WW .  .  .  I  I  I  I  I
-    [null,null,null,null,'WW',null,null,null,'I','I','I','I','I',null,null,null,null,null],
-    // row 10: (빈 행)
-    [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-    // row 11:         .  .  .  .  J  J  J  J  J  J
-    [null,null,null,null,null,null,null,null,'J','J','J','J','J','J',null,null,null,null],
-    // row 12:         .  .  .  .  K  K  K  K  K  K
-    [null,null,null,null,null,null,null,null,'K','K','K','K','K','K',null,null,null,null],
-    // row 13: (빈 행)
-    [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-    // row 14: U  .  .  .  .  Y  .  .  L  L  L  L  L  L
-    ['U',null,null,null,null,'Y',null,null,'L','L','L','L','L','L',null,null,null,null],
-    // row 15: U  .  .  .  .  Y  .  .  M  M  M  M  M  M
-    ['U',null,null,null,null,'Y',null,null,'M','M','M','M','M','M',null,null,null,null],
-    // row 16: T  .  S  R  Q  Y  .  .  .  .  .  .  .  .
-    ['T',null,'S','R','Q','Y',null,null,null,null,null,null,null,null,null,null,null,null],
-    // row 17: T  .  S  R  Q  Y  .  .  N  N  N  N  N  N
-    ['T',null,'S','R','Q','Y',null,null,'N','N','N','N','N','N',null,null,null,null],
-    // row 18: T  .  S  R  Q  .  .  .  O  O  O  O  O  O
-    ['T',null,'S','R','Q',null,null,null,'O','O','O','O','O','O',null,null,null,null],
-    // row 19: T  .  S  R  Q  Y  .  .  .  .  .  .  .  .
-    ['T',null,'S','R','Q','Y',null,null,null,null,null,null,null,null,null,null,null,null],
-    // row 20: T  .  S  R  Q  .  .  .  P  P  P  P  P  P
-    ['T',null,'S','R','Q',null,null,null,'P','P','P','P','P','P',null,null,null,null],
-    // row 21: T  .  S  R  Q  .  Y  Z  P  P  P  P  P  P
-    ['T',null,'S','R','Q',null,'Y','Z',null,null,null,null,null,null,null,null,null,null],
+  // 물리적 창고 배치도 - 각 블록: [섹션명, col-start, row-start, col-span, row-span]
+  // 그리드: 12열 x 18행
+  const blocks=[
+    // A~I 그룹 (오른쪽 상단)
+    ['V',  3,1, 1,3],
+    ['AA', 4,1, 1,2],
+    ['A',  5,1, 6,1],
+    ['B',  5,2, 6,1],
+    ['C',  5,3, 6,1],
+    ['W',  3,4, 1,2],
+    ['BB', 4,4, 1,2],
+    ['D',  5,4, 6,1],
+    ['E',  5,5, 6,1],
+    ['X',  3,6, 1,3],
+    ['F',  5,6, 6,1],
+    ['G',  5,7, 6,1],
+    ['WW', 3,9, 1,2],
+    ['H',  5,9, 6,1],
+    ['I',  5,10,6,1],
+
+    // J~P 그룹 (오른쪽 하단)
+    ['J',  5,11,6,1],
+    ['K',  5,12,6,1],
+    ['Y',  4,13,1,4],
+    ['Z',  4,17,1,2],
+    ['L',  5,13,6,1],
+    ['M',  5,14,6,1],
+    ['N',  5,15,6,1],
+    ['O',  5,16,6,1],
+    ['P',  5,17,6,1],
+
+    // Q~U 그룹 (왼쪽 하단)
+    ['U',  1,13,1,2],
+    ['T',  1,15,1,4],
+    ['S',  2,15,1,4],
+    ['R',  3,15,1,4],
+    ['Q',  4,11,1,2],
   ];
 
   const secToGroup={};
   WH_GROUPS.forEach(g=>{
     [...g.secs,...(g.extra||[]),...(g.extra1||[]),...(g.extra2||[])].forEach(s=>secToGroup[s]=g.id);
   });
-
   const groupColors={AI:'sec-ai',JP:'sec-jp',QU:'sec-qu'};
 
-  layout.forEach(row=>{
-    row.forEach(sec=>{
-      const cell=document.createElement('div');
-      cell.className='wh-map-cell';
-      if(sec){
-        const gid=secToGroup[sec];
-        cell.classList.add(groupColors[gid]||'sec-extra');
-        cell.textContent=sec;
-        cell.addEventListener('click',()=>{
-          fullViewGroup=gid;
-          renderFullView();
-        });
-      } else {
-        cell.classList.add('sec-empty');
-        cell.style.cursor='default';
-      }
-      grid.appendChild(cell);
+  blocks.forEach(([sec,c,r,cs,rs])=>{
+    const block=document.createElement('div');
+    block.className='wh-map-block';
+    const gid=secToGroup[sec];
+    block.classList.add(groupColors[gid]||'sec-extra');
+    block.textContent=sec;
+    block.style.gridColumn=`${c}/${c+cs}`;
+    block.style.gridRow=`${r}/${r+rs}`;
+    block.addEventListener('click',()=>{
+      fullViewGroup=gid;
+      renderFullView();
     });
+    grid.appendChild(block);
   });
 
   container.appendChild(grid);
