@@ -771,7 +771,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   /* 슬롯 크기 축소 */
   .slot { width: 80px!important; min-width: 80px!important; max-width: 80px!important; height: 90px!important; font-size: 9px!important; }
   .slot.has-item { width: 80px!important; min-width: 80px!important; max-width: 80px!important; }
-  .slot.풀박스 { width: 163px!important; min-width: 163px!important; max-width: 163px!important; }
+  .slot.풀박스 { width: calc(80px * 2 + 2px)!important; min-width: calc(80px * 2 + 2px)!important; max-width: calc(80px * 2 + 2px)!important; }
   .zgroup { grid-template-columns: 80px 80px!important; grid-template-rows: 44px 44px!important; height: auto!important; }
   .zgroup .slot { height: 44px!important; }
   .slot-id { font-size: 10px!important; }
@@ -798,6 +798,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 @media (max-width: 480px) {
   .slot { width: 65px!important; min-width: 65px!important; max-width: 65px!important; height: 75px!important; font-size: 8px!important; gap: 1px!important; }
   .slot.has-item { width: 65px!important; min-width: 65px!important; max-width: 65px!important; }
+  .slot.풀박스 { width: calc(65px * 2 + 2px)!important; min-width: calc(65px * 2 + 2px)!important; max-width: calc(65px * 2 + 2px)!important; }
   .zgroup { grid-template-columns: 65px 65px!important; grid-template-rows: 36px 36px!important; height: auto!important; }
   .zgroup .slot { height: 36px!important; }
 }
