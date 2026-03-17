@@ -1011,17 +1011,14 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   <div class="tabbar-item on" id="tab-full" onclick="switchTab('full')">
     <div class="tabbar-icon">🏭</div>전체뷰
   </div>
-  <div class="tabbar-item" id="tab-map" onclick="switchTab('map')">
-    <div class="tabbar-icon">🗺</div>조감도
-  </div>
-  <div class="tabbar-item" id="tab-list" onclick="switchTab('list')">
-    <div class="tabbar-icon">📋</div>섹션목록
-  </div>
   <div class="tabbar-item" id="tab-table" onclick="switchTab('table')">
     <div class="tabbar-icon">📊</div>목록
   </div>
   <div class="tabbar-item" id="tab-queue" onclick="switchTab('queue')">
     <div class="tabbar-icon">🏷</div>인쇄<span class="pq-badge" id="pqBadge" style="display:none;background:#dc2626;color:#fff;font-size:9px;border-radius:8px;padding:0 5px;margin-left:2px;font-weight:700"></span>
+  </div>
+  <div class="tabbar-item" id="tab-back" onclick="history.back()">
+    <div class="tabbar-icon">↩</div>뒤로
   </div>
 </div>
 
@@ -2223,8 +2220,6 @@ function switchTab(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   currentTab=name;
-  if(name==='map')renderOverview();
-  if(name==='list')renderList();
   if(name==='full')renderFullView();
   if(name==='table')renderTable();
   if(name==='queue')renderPrintQueue();
@@ -2241,10 +2236,8 @@ function openSection(sec){
 
 function goBack(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-  document.getElementById('panel-'+(prevTab||'map')).classList.add('on');
-  if((prevTab||'map')==='map')renderOverview();
-  if((prevTab||'map')==='list')renderList();
-  if((prevTab||'map')==='full')renderFullView();
+  document.getElementById('panel-'+(prevTab||'full')).classList.add('on');
+  if((prevTab||'full')==='full')renderFullView();
   if((prevTab||'map')==='table')renderTable();
 }
 
