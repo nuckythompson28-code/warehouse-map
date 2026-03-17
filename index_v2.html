@@ -249,8 +249,10 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot.dim{opacity:.1}
 .slot.no-qty{opacity:.35}
 .slot.UNUSED{opacity:.2;filter:grayscale(.7)}
-.slot.IN::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 0 1.5px rgba(16,185,129,.25)}
 .slot.EMPTY::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#e2e8f0;border:1px solid #94a3b8}
+.qty-badge{position:absolute;top:1px;right:1px;z-index:10;pointer-events:none;
+  background:#dc2626;color:#fff;font-size:5px;font-weight:800;line-height:1;
+  padding:2px 3px;border-radius:3px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.3)}
 
 /* 기본: 빈 슬롯 연회색 */
 .slot{background:#e8e4de;border-color:#d5cfc6;color:#78716c}
@@ -2008,12 +2010,26 @@ function getStaleInfo(d){
   return {stale, days: daysSinceLast, lastOut, lastIn, top100};
 }
 
+let qtyTop100 = new Set(); // 수량 top100 키 셋 (material|item)
+function buildQtyTop100(){
+  const qtyMap = {};
+  data.forEach(d=>{
+    if(!d.item || !d.qty) return;
+    const baseMat = (d.material||'').split(/[(\s]/)[0];
+    const key = baseMat + '|' + d.item.toLowerCase();
+    const q = parseInt(d.qty)||0;
+    if(q > (qtyMap[key]||0)) qtyMap[key] = q;
+  });
+  const sorted = Object.entries(qtyMap).sort((a,b)=>b[1]-a[1]);
+  qtyTop100 = new Map(sorted.slice(0,100).map(([k,v],i)=>[k,i+1]));
+}
+
 async function loadShipmentData(){
   try{
     const res = await fetch('shipment_data.json');
     if(!res.ok) throw new Error('fetch failed');
     shipmentData = await res.json();
-    // re-render to apply stale indicators
+    buildQtyTop100();
     renderAll();
   }catch(e){
     console.warn('shipment_data.json 로드 실패, 장기미출고 기능 비활성:', e.message);
@@ -2646,6 +2662,13 @@ function makeSlotEl(d){
   if(staleInfo.top100){
     inner+=`<span class="star-badge">★${staleInfo.top100}</span>`;
   }
+  // 수량 top100
+  const baseMat2 = (d.material||'').split(/[(\s]/)[0];
+  const qtyKey = baseMat2 + '|' + (d.item||'').toLowerCase();
+  const qtyRank = qtyTop100.get(qtyKey);
+  if(qtyRank){
+    inner+=`<span class="qty-badge">Q${qtyRank}</span>`;
+  }
 
   // 멀티아이템 배지
   const groupItems=getSlotGroupItems(d);
@@ -2664,6 +2687,7 @@ function makeSlotEl(d){
   else if(staleInfo.days>=0) tip+=`<br>마지막 출고: ${staleInfo.lastOut} (${staleInfo.days}일 전)`;
   if(staleInfo.lastIn) tip+=`<br>마지막 입고: ${staleInfo.lastIn}`;
   if(staleInfo.top100) tip+=`<br>⭐ 입출고 TOP #${staleInfo.top100}`;
+  if(qtyRank) tip+=`<br>🔴 수량 TOP #${qtyRank}`;
   inner+=`<div class="slot-tip">${tip}</div>`;
 
   slot.innerHTML=inner;
