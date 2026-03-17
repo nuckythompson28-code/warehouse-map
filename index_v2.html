@@ -270,6 +270,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .slot.stale{outline:2px solid #ef4444;outline-offset:-1px;animation:stalePulse 2s infinite}
 @keyframes stalePulse{0%,100%{outline-color:#ef4444}50%{outline-color:#f97316}}
 .stale-icon{position:absolute;top:1px;left:1px;font-size:7px;line-height:1;z-index:10;pointer-events:none;filter:drop-shadow(0 0 1px rgba(0,0,0,.3))}
+.star-icon{position:absolute;bottom:1px;right:1px;font-size:7px;line-height:1;z-index:10;pointer-events:none;filter:drop-shadow(0 0 1px rgba(0,0,0,.3))}
 .popup-card .card-shipment{font-size:11px;color:var(--muted);margin-top:4px;padding-top:4px;border-top:1px dashed var(--border)}
 
 .slot-id{font-size:9px;line-height:1;font-weight:700;letter-spacing:.2px}
@@ -1979,23 +1980,23 @@ let data=baseRows.map((r,idx)=>({
 let shipmentData = {};
 
 function getStaleInfo(d){
-  if(!d || !d.item) return {stale:false};
-  // base material: split on '(' or whitespace, take first part
+  if(!d || !d.item) return {stale:false, top100:false};
   const baseMat = (d.material||'').split(/[(\s]/)[0];
   const key = baseMat + '|' + d.item.toLowerCase();
   const info = shipmentData[key];
   const today = new Date();
   today.setHours(0,0,0,0);
+  const top100 = info ? !!info.top100 : false;
   if(!info){
-    return {stale:true, days:-1, lastOut:'', lastIn:''};
+    return {stale:true, days:-1, lastOut:'', lastIn:'', top100};
   }
   const lastIn = info.lastIn||'';
   if(!info.lastOut || info.lastOut === ''){
-    return {stale:true, days:-1, lastOut:'', lastIn};
+    return {stale:true, days:-1, lastOut:'', lastIn, top100};
   }
   const lastDate = new Date(info.lastOut);
   const diffDays = Math.floor((today - lastDate)/(1000*60*60*24));
-  return {stale: diffDays > 180, days: diffDays, lastOut: info.lastOut, lastIn};
+  return {stale: diffDays > 180, days: diffDays, lastOut: info.lastOut, lastIn, top100};
 }
 
 async function loadShipmentData(){
@@ -2632,6 +2633,7 @@ function makeSlotEl(d){
   let inner=`<span class="slot-id">${d.order}</span>`;
   if(d.material) inner+=`<span class="slot-material">${d.material}</span>`;
   if(staleInfo.stale) inner+=`<span class="stale-icon">⚠️</span>`;
+  if(staleInfo.top100) inner+=`<span class="star-icon">⭐</span>`;
 
   // 멀티아이템 배지
   const groupItems=getSlotGroupItems(d);
@@ -2649,6 +2651,7 @@ function makeSlotEl(d){
   else if(staleInfo.stale) tip+=`<br>⚠️ 마지막 출고: ${staleInfo.lastOut} (${staleInfo.days}일 전)`;
   else if(staleInfo.days>=0) tip+=`<br>마지막 출고: ${staleInfo.lastOut} (${staleInfo.days}일 전)`;
   if(staleInfo.lastIn) tip+=`<br>마지막 입고: ${staleInfo.lastIn}`;
+  if(staleInfo.top100) tip+=`<br>⭐ 입출고 TOP 100`;
   inner+=`<div class="slot-tip">${tip}</div>`;
 
   slot.innerHTML=inner;
