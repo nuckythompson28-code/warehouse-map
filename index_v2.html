@@ -2674,6 +2674,10 @@ function makeSlotEl(d){
   if(d.material) tip+=`<br>소재: ${d.material}`;
   if(d.type) tip+=`<br>타입: ${d.type}`;
   if(d.qty) tip+=`<br>수량: ${d.qty}`;
+  if(staleInfo.stale && staleInfo.lastOut==='') tip+=`<br>⚠️ 출고이력 없음`;
+  else if(staleInfo.stale) tip+=`<br>⚠️ 마지막 출고: ${staleInfo.lastOut} (${staleInfo.days}일 전)`;
+  else if(staleInfo.days>=0) tip+=`<br>마지막 출고: ${staleInfo.lastOut} (${staleInfo.days}일 전)`;
+  if(staleInfo.lastIn) tip+=`<br>마지막 입고: ${staleInfo.lastIn}`;
   inner+=`<div class="slot-tip">${tip}</div>`;
 
   slot.innerHTML=inner;
