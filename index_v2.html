@@ -849,7 +849,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   </div>
   <div class="search-bar">
     <span style="color:var(--muted)">🔍</span>
-    <input id="searchInput" placeholder="섹션 또는 품목코드 검색..." oninput="onSearch()">
+    <input id="searchInput" placeholder="섹션 또는 치수 검색..." oninput="onSearch()">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
   </div>
   <div class="search-filter-bar" id="searchFilterBar">
@@ -938,7 +938,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
           <th onclick="tblSort('floor')">층 <span class="sort-icon">↕</span></th>
           <th onclick="tblSort('type')">타입 <span class="sort-icon">↕</span></th>
           <th onclick="tblSort('state')">상태 <span class="sort-icon">↕</span></th>
-          <th onclick="tblSort('item')">품목코드 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('item')">치수 <span class="sort-icon">↕</span></th>
           <th onclick="tblSort('material')">소재 <span class="sort-icon">↕</span></th>
           <th onclick="tblSort('qty')">수량 <span class="sort-icon">↕</span></th>
           <th onclick="tblSort('inDate')">입고일 <span class="sort-icon">↕</span></th>
@@ -1037,14 +1037,8 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
     </select>
   </div>
   <div class="sheet-field">
-    <span class="sheet-label">저장</span>
-    <select id="sheetSaved" class="sheet-select">
-      <option value="0">❌</option><option value="1">✅</option>
-    </select>
-  </div>
-  <div class="sheet-field">
-    <span class="sheet-label">품목코드</span>
-    <input id="sheetItem" class="sheet-input" placeholder="예: ABC-123">
+    <span class="sheet-label">치수</span>
+    <input id="sheetItem" class="sheet-input" placeholder="예: 245*250*15">
   </div>
   <div class="sheet-field">
     <span class="sheet-label">소재</span>
@@ -2259,7 +2253,7 @@ function renderSearchResults(){
   const header=document.getElementById('searchResultHeader');
   list.innerHTML='';
 
-  // 매칭 슬롯: 섹션명 OR 품목코드 OR 메모
+  // 매칭 슬롯: 섹션명 OR 치수 OR 메모
   const matches=data.filter(d=>
     d.section.toUpperCase().includes(searchQ)||
     (d.item||'').toUpperCase().includes(searchQ)||
@@ -2267,7 +2261,7 @@ function renderSearchResults(){
     (d.memo||'').toUpperCase().includes(searchQ)
   );
 
-  // 품목코드 정확 매칭 우선 정렬
+  // 치수 정확 매칭 우선 정렬
   matches.sort((a,b)=>{
     const aExact=(a.item||'').toUpperCase()===searchQ;
     const bExact=(b.item||'').toUpperCase()===searchQ;
@@ -2281,7 +2275,7 @@ function renderSearchResults(){
     return a.section.localeCompare(b.section)||(a.floor-b.floor)||(a.order-b.order);
   });
 
-  // 품목코드로 검색한 경우 (섹션 단독 검색 아닐때) 품목없는 슬롯은 제외
+  // 치수로 검색한 경우 (섹션 단독 검색 아닐때) 품목없는 슬롯은 제외
   const isItemSearch=!('ABCDEFGHIJKLMNOP'.includes(searchQ)&&searchQ.length===1);
   const filtered=isItemSearch
     ? matches.filter(d=>(d.item||'').toUpperCase().includes(searchQ)||(d.memo||'').toUpperCase().includes(searchQ))
@@ -2298,7 +2292,7 @@ function renderSearchResults(){
       <div>🔍</div>
       <b style="color:var(--text)">"${document.getElementById('searchInput').value}"</b> 검색 결과 없음
       <br><span style="font-size:12px;margin-top:8px;display:block;color:var(--muted)">
-        ${hasAnyItem ? '등록된 품목 중 일치하는 항목이 없어요' : '아직 품목코드가 등록된 슬롯이 없어요.<br>슬롯을 탭해서 품목코드를 입력해주세요'}
+        ${hasAnyItem ? '등록된 품목 중 일치하는 항목이 없어요' : '아직 치수가 등록된 슬롯이 없어요.<br>슬롯을 탭해서 치수를 입력해주세요'}
       </span>
     </div>`;
     return;
@@ -2339,7 +2333,6 @@ function renderSearchResults(){
             <span style="color:${typeColor}">■ ${d.type||'유형미지정'}</span>
             ${d.inDate?`<span>입고: ${d.inDate}</span>`:''}
             ${d.memo?`<span>💬 ${d.memo}</span>`:''}
-            ${d.saved==1?'<span style="color:#34d399">💾 저장됨</span>':''}
           </div>
         </div>
         <div class="result-status ${statusCls}">${statusLbl}</div>
@@ -2548,7 +2541,6 @@ function renderDetail(sec){
     <div class="stat-chip"><span class="sdot" style="background:#38bdf8"></span>전체<b>${sd.length}</b></div>
     <div class="stat-chip"><span class="sdot" style="background:#34d399"></span>ACTIVE<b>${act}</b></div>
     <div class="stat-chip"><span class="sdot" style="background:#fbbf24"></span>HOLD<b>${hld}</b></div>
-    ${sv>0?`<div class="stat-chip"><span class="sdot" style="background:#34d399"></span>저장됨<b>${sv}</b></div>`:''}
     ${ns>0?`<div class="stat-chip"><span class="sdot" style="background:#536080"></span>미지정<b>${ns}</b></div>`:''}
   `;
   content.appendChild(statEl);
@@ -2740,7 +2732,7 @@ function renderPopupCards(){
               <option value="CM20"${d.material==='CM20'?' selected':''}>CM20 (베이지)</option>
             </select>
           </label>
-          <label>품목코드 <input class="cedit-item" value="${d.item||''}" placeholder="예: 245*250*15"></label>
+          <label>치수 <input class="cedit-item" value="${d.item||''}" placeholder="예: 245*250*15"></label>
           <label>수량 <input class="cedit-qty" type="number" min="0" value="${d.qty??''}" placeholder="0"></label>
           <label>유형
             <select class="cedit-type">
@@ -2758,12 +2750,6 @@ function renderPopupCards(){
               <option value=""${!d.status||d.status!=='UNUSED'?' selected':''}>미지정</option>
               <option value="EMPTY"${d.status==='EMPTY'?' selected':''}>⬜ 공실</option>
               <option value="UNUSED"${d.status==='UNUSED'?' selected':''}>🔴 미사용</option>
-            </select>
-          </label>
-          <label>저장
-            <select class="cedit-saved">
-              <option value="0"${!d.saved?' selected':''}>❌</option>
-              <option value="1"${d.saved?' selected':''}>✅</option>
             </select>
           </label>
           <label>입고일 <input class="cedit-indate" type="date" value="${d.inDate||''}"></label>
@@ -2844,7 +2830,7 @@ function addCardToQueue(id,cardEl){
   // 편집 중인 값 읽기
   const item=cardEl.querySelector('.cedit-item')?cardEl.querySelector('.cedit-item').value.trim():(d.item||'');
   const mat=cardEl.querySelector('.cedit-material')?cardEl.querySelector('.cedit-material').value:(d.material||'');
-  if(!item&&!mat){showToast('품목코드 또는 소재를 입력해주세요');return;}
+  if(!item&&!mat){showToast('치수 또는 소재를 입력해주세요');return;}
   const q=getPrintQueue();
   const exists=q.find(x=>x.loc===loc&&x.item===item&&x.mat===mat);
   if(exists){showToast('이미 대기열에 있습니다');return;}
@@ -3573,7 +3559,7 @@ function addToQueue(){
   const loc=`${d.section}${d.floor}-${d.order}`;
   const item=document.getElementById('sheetItem').value.trim();
   const mat=document.getElementById('sheetMaterial').value.trim();
-  if(!item && !mat){showToast('품목코드 또는 소재를 입력해주세요');return;}
+  if(!item && !mat){showToast('치수 또는 소재를 입력해주세요');return;}
   const q=getPrintQueue();
   // 중복 체크
   const exists=q.find(x=>x.loc===loc && x.item===item && x.mat===mat);
