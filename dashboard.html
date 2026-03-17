@@ -109,12 +109,7 @@ th.sorted .sort-arrow{opacity:1;color:var(--accent)}
 td{padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--surface2)}
-tr.row-red{background:#fef2f2}
-tr.row-red:hover{background:#fee2e2}
-tr.row-orange{background:#fff7ed}
-tr.row-orange:hover{background:#ffedd5}
-tr.row-yellow{background:#fefce8}
-tr.row-yellow:hover{background:#fef9c3}
+/* 악성재고 그라데이션은 인라인 스타일로 적용 */
 .badge{
   display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
 }
@@ -361,22 +356,26 @@ tr.row-yellow:hover{background:#fef9c3}
         return;
       }
 
+      // 미출고일수 최대값 계산 (그라데이션 스케일링용)
+      const maxDays=filtered.reduce((m,i)=>i.neverShipped?m:Math.max(m,i.staleDays),365);
+
       tbody.innerHTML=filtered.map(i=>{
-        let rowClass='';
         let badge='';
+        let bgColor='';
         if(i.neverShipped){
-          rowClass='row-red';
-          badge='<span class="badge badge-red">없음</span>';
-        }else if(i.staleDays>=365){
-          rowClass='row-orange';
-          badge='<span class="badge badge-orange">'+i.staleDays+'일</span>';
+          // 출고이력 없음 = 가장 진한 빨강
+          bgColor='rgba(220,38,38,0.25)';
+          badge='<span class="badge badge-red">이력없음</span>';
         }else{
-          rowClass='row-yellow';
-          badge='<span class="badge badge-yellow">'+i.staleDays+'일</span>';
+          // 미출고일수에 비례해서 빨강 강도 조절 (180일=연한, maxDays=진한)
+          const ratio=Math.min((i.staleDays-180)/(Math.max(maxDays-180,1)),1);
+          const alpha=(0.06+ratio*0.19).toFixed(2);
+          bgColor='rgba(220,38,38,'+alpha+')';
+          badge='<span class="badge" style="background:rgba(220,38,38,'+(0.1+ratio*0.2).toFixed(2)+');color:'+(ratio>0.5?'#fff':'#991b1b')+'">'+i.staleDays+'일</span>';
         }
         const loc=i.section+(i.floor?'/'+i.floor:'')+(i.order?'/'+i.order:'');
         const outDate=i.lastOut||'-';
-        return '<tr class="'+rowClass+'">'+
+        return '<tr style="background:'+bgColor+'">'+
           '<td>'+esc(loc)+'</td>'+
           '<td>'+esc(i.material)+'</td>'+
           '<td>'+esc(i.item)+'</td>'+
