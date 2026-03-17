@@ -247,6 +247,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 }
 .slot:hover{z-index:40;box-shadow:0 3px 10px rgba(0,0,0,.18);outline:2px solid var(--accent)}
 .slot.dim{opacity:.1}
+.slot.no-qty{opacity:.35}
 .slot.UNUSED{opacity:.2;filter:grayscale(.7)}
 .slot.IN::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 0 1.5px rgba(16,185,129,.25)}
 .slot.EMPTY::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#e2e8f0;border:1px solid #94a3b8}
@@ -2625,6 +2626,7 @@ function makeSlotEl(d){
   let cls=`slot ${tc} ${state}`;
   if(d.material)cls+=` mat-${d.material}`;
   if(d.item)cls+=' has-item';
+  if(d.item && !d.qty) cls+=' no-qty';
   const staleInfo=getStaleInfo(d);
   if(staleInfo.stale)cls+=' stale';
   slot.className=cls;
