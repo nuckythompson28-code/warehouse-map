@@ -276,6 +276,13 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   background:#16a34a;color:#fff;font-size:5px;font-weight:800;line-height:1;
   padding:2px 3px;border-radius:3px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.3)}
 .popup-card .card-shipment{font-size:11px;color:var(--muted);margin-top:4px;padding-top:4px;border-top:1px dashed var(--border)}
+.card-history{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.card-history-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px}
+.card-history-tbl{width:100%;border-collapse:collapse;font-size:10px}
+.card-history-tbl th{background:var(--surface2);padding:3px 6px;text-align:left;font-weight:600;color:var(--muted)}
+.card-history-tbl td{padding:3px 6px;border-bottom:1px solid var(--border)}
+.card-history-tbl tr.hist-out td{color:#dc2626}
+.card-history-tbl tr.hist-in td{color:#059669}
 
 .slot-id{font-size:9px;line-height:1;font-weight:700;letter-spacing:.2px}
 .slot-item{display:none}
@@ -2024,11 +2031,17 @@ function buildQtyTop100(){
   qtyTop100 = new Map(sorted.slice(0,100).map(([k,v],i)=>[k,i+1]));
 }
 
+let shipmentHistory = {};
+
 async function loadShipmentData(){
   try{
-    const res = await fetch('shipment_data.json');
+    const [res, hRes] = await Promise.all([
+      fetch('shipment_data.json'),
+      fetch('shipment_history.json')
+    ]);
     if(!res.ok) throw new Error('fetch failed');
     shipmentData = await res.json();
+    if(hRes.ok) shipmentHistory = await hRes.json();
     buildQtyTop100();
     renderAll();
   }catch(e){
@@ -2822,6 +2835,25 @@ function renderPopupCards(){
           else if(si.stale) shipHtml+=`<div class="card-shipment">⚠️ 마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
           else if(si.days>=0) shipHtml+=`<div class="card-shipment">마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
           if(si.lastIn) shipHtml+=`<div class="card-shipment">마지막 입고: ${si.lastIn}</div>`;
+          // 입출고 이력 테이블
+          if(d.item && d.material){
+            const hKey = (d.material||'').split(/[(\s]/)[0] + '|' + d.item.toLowerCase();
+            const hist = shipmentHistory[hKey];
+            if(hist && hist.length){
+              shipHtml+=`<div class="card-history">
+                <div class="card-history-title">최근 입출고 이력</div>
+                <table class="card-history-tbl">
+                  <tr><th>날짜</th><th>구분</th><th>수량</th><th>업체</th></tr>
+                  ${hist.map(h=>`<tr class="${h.type==='출고'?'hist-out':'hist-in'}">
+                    <td>${h.date}</td>
+                    <td>${h.type}</td>
+                    <td>${h.qty.toLocaleString()}</td>
+                    <td>${h.company||'-'}</td>
+                  </tr>`).join('')}
+                </table>
+              </div>`;
+            }
+          }
           return shipHtml;
         })()}
       `;
