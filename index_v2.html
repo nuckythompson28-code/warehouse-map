@@ -2011,15 +2011,18 @@ function getStaleInfo(d){
   const baseMat = (d.material||'').split(/[(\s]/)[0];
   const key = baseMat + '|' + d.item.toLowerCase();
   const info = shipmentData[key];
-  if(!info) return {stale:false};
   const today = new Date();
   today.setHours(0,0,0,0);
+  if(!info){
+    return {stale:true, days:-1, lastOut:'', lastIn:''};
+  }
+  const lastIn = info.lastIn||'';
   if(!info.lastOut || info.lastOut === ''){
-    return {stale:true, days:-1, lastOut:''};
+    return {stale:true, days:-1, lastOut:'', lastIn};
   }
   const lastDate = new Date(info.lastOut);
   const diffDays = Math.floor((today - lastDate)/(1000*60*60*24));
-  return {stale: diffDays > 180, days: diffDays, lastOut: info.lastOut};
+  return {stale: diffDays > 180, days: diffDays, lastOut: info.lastOut, lastIn};
 }
 
 async function loadShipmentData(){
@@ -2801,10 +2804,12 @@ function renderPopupCards(){
         ${(()=>{
           const si=getStaleInfo(d);
           if(!d.item) return '';
-          if(si.stale && si.lastOut==='') return '<div class="card-shipment">⚠️ 출고이력 없음</div>';
-          if(si.stale) return `<div class="card-shipment">⚠️ 마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
-          if(si.days>=0) return `<div class="card-shipment">마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
-          return '';
+          let shipHtml='';
+          if(si.stale && si.lastOut==='') shipHtml+='<div class="card-shipment">⚠️ 출고이력 없음</div>';
+          else if(si.stale) shipHtml+=`<div class="card-shipment">⚠️ 마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
+          else if(si.days>=0) shipHtml+=`<div class="card-shipment">마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
+          if(si.lastIn) shipHtml+=`<div class="card-shipment">마지막 입고: ${si.lastIn}</div>`;
+          return shipHtml;
         })()}
       `;
       card.addEventListener('click',e=>{
