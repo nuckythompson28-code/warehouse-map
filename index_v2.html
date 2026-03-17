@@ -1988,17 +1988,23 @@ function getStaleInfo(d){
   const info = shipmentData[key];
   const today = new Date();
   today.setHours(0,0,0,0);
-  const top100 = info && info.top100 ? info.top100 : false;  // 순위 번호 or false
+  const top100 = info && info.top100 ? info.top100 : false;
   if(!info){
+    // 입출고 이력 자체가 없음
     return {stale:true, days:-1, lastOut:'', lastIn:'', top100};
   }
   const lastIn = info.lastIn||'';
-  if(!info.lastOut || info.lastOut === ''){
-    return {stale:true, days:-1, lastOut:'', lastIn, top100};
+  const lastOut = info.lastOut||'';
+  // 마지막 입고/출고 중 더 최근 날짜 기준
+  const lastAny = [lastOut, lastIn].filter(Boolean).sort().pop() || '';
+  let daysSinceLast = -1;
+  if(lastAny){
+    const lastDate = new Date(lastAny);
+    daysSinceLast = Math.floor((today - lastDate)/(1000*60*60*24));
   }
-  const lastDate = new Date(info.lastOut);
-  const diffDays = Math.floor((today - lastDate)/(1000*60*60*24));
-  return {stale: diffDays > 180, days: diffDays, lastOut: info.lastOut, lastIn, top100};
+  // 1000일 이상 입출고 둘 다 없으면 stale
+  const stale = !lastAny || daysSinceLast >= 1000;
+  return {stale, days: daysSinceLast, lastOut, lastIn, top100};
 }
 
 async function loadShipmentData(){
