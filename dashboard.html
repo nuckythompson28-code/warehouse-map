@@ -232,9 +232,9 @@ tr.row-yellow:hover{background:#fef9c3}
       const section=row.section||'';
       const floor=row.floor||'';
       const order=row.order||'';
-      const rawMat=row.type||'';
+      const rawMat=String(row.material||'');
       const baseMat=stripParens(rawMat);
-      const rawItem=(row.item||'').toLowerCase();
+      const rawItem=String(row.item||'').toLowerCase();
       const qty=parseInt(row.qty)||0;
       const key=baseMat+'|'+rawItem;
       const ship=shipment[key]||{};
