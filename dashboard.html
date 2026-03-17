@@ -108,7 +108,16 @@ th .sort-arrow{margin-left:4px;font-size:10px;opacity:.5}
 th.sorted .sort-arrow{opacity:1;color:var(--accent)}
 td{padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
 tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:var(--surface2)}
+tbody tr:hover{filter:brightness(0.95)}
+tbody tr{position:relative}
+/* 호버 툴팁 */
+.row-tip{
+  display:none;position:absolute;left:50%;top:100%;transform:translateX(-50%);
+  z-index:50;background:#1c1917;color:#fff;padding:8px 12px;border-radius:8px;
+  font-size:12px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3);
+  line-height:1.6;pointer-events:none;
+}
+tbody tr:hover .row-tip{display:block}
 /* 악성재고 그라데이션은 인라인 스타일로 적용 */
 .badge{
   display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
@@ -234,7 +243,9 @@ tbody tr:hover{background:var(--surface2)}
       const key=baseMat+'|'+rawItem;
       const ship=shipment[key]||{};
       const lastOut=ship.lastOut||'';
+      const lastIn=ship.lastIn||'';
       const totalOut=ship.totalOut||0;
+      const totalIn=ship.totalIn||0;
       const staleDays=lastOut?daysSince(lastOut):Infinity;
 
       items.push({
@@ -244,7 +255,9 @@ tbody tr:hover{background:var(--surface2)}
         item:row.item||'',
         qty,
         lastOut,
+        lastIn,
         totalOut,
+        totalIn,
         staleDays,
         neverShipped:!lastOut&&totalOut===0
       });
@@ -375,13 +388,19 @@ tbody tr:hover{background:var(--surface2)}
         }
         const loc=i.section+(i.floor?'/'+i.floor:'')+(i.order?'/'+i.order:'');
         const outDate=i.lastOut||'-';
+        const tipLines=[];
+        tipLines.push('마지막 출고: '+(i.lastOut||'없음'));
+        tipLines.push('마지막 입고: '+(i.lastIn||'없음'));
+        tipLines.push('총 출고량: '+i.totalOut.toLocaleString()+'개');
+        tipLines.push('총 입고량: '+i.totalIn.toLocaleString()+'개');
+        const tip=tipLines.join('<br>');
         return '<tr style="background:'+bgColor+'">'+
           '<td>'+esc(loc)+'</td>'+
           '<td>'+esc(i.material)+'</td>'+
           '<td>'+esc(i.item)+'</td>'+
           '<td style="text-align:right">'+i.qty.toLocaleString()+'</td>'+
           '<td>'+esc(outDate)+'</td>'+
-          '<td>'+badge+'</td>'+
+          '<td style="position:relative">'+badge+'<div class="row-tip">'+tip+'</div></td>'+
           '</tr>';
       }).join('');
     }
