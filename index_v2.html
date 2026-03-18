@@ -3026,11 +3026,15 @@ function renderFullOverview(wrap){
     ['H',  7,9, 6,1],
     ['I',  7,10,6,1],
 
+    // 입구
+    ['입',  5,11,1,1, 'entrance'],
+    ['구',  5,12,1,1, 'entrance'],
+
     // J~P 그룹 (오른쪽 하단)
     ['J',  7,11,6,1],
     ['K',  7,12,6,1],
-    ['Y',  6,13,1,3],
-    ['Z',  6,16,1,2],
+    ['Y',  5,13,1,3],
+    ['Z',  5,16,1,2],
     ['L',  7,13,6,1],
     ['M',  7,14,6,1],
     ['N',  7,15,6,1],
@@ -3038,11 +3042,11 @@ function renderFullOverview(wrap){
     ['P',  7,17,6,1],
 
     // Q~U 그룹 (왼쪽 하단)
-    ['U',  1,12,1,2],
-    ['T',  1,14,1,4],
-    ['S',  2,14,1,4],
-    ['R',  3,14,1,4],
-    ['Q',  4,14,1,4],
+    ['U',  1,12,1,1],
+    ['T',  1,13,1,5],
+    ['S',  2,13,1,5],
+    ['R',  3,13,1,5],
+    ['Q',  4,13,1,5],
   ];
 
   const secToGroup={};
@@ -3051,18 +3055,23 @@ function renderFullOverview(wrap){
   });
   const groupColors={AI:'sec-ai',JP:'sec-jp',QU:'sec-qu'};
 
-  blocks.forEach(([sec,c,r,cs,rs])=>{
+  blocks.forEach(([sec,c,r,cs,rs,type])=>{
     const block=document.createElement('div');
     block.className='wh-map-block';
-    const gid=secToGroup[sec];
-    block.classList.add(groupColors[gid]||'sec-extra');
-    block.textContent=sec;
     block.style.gridColumn=`${c}/${c+cs}`;
     block.style.gridRow=`${r}/${r+rs}`;
-    block.addEventListener('click',()=>{
-      fullViewGroup=gid;
-      renderFullView();
-    });
+    if(type==='entrance'){
+      block.style.cssText+=';background:#78716c;color:#fff;cursor:default;font-size:clamp(10px,2.5vw,16px)';
+      block.textContent=sec;
+    } else {
+      const gid=secToGroup[sec];
+      block.classList.add(groupColors[gid]||'sec-extra');
+      block.textContent=sec;
+      block.addEventListener('click',()=>{
+        fullViewGroup=gid;
+        renderFullView();
+      });
+    }
     grid.appendChild(block);
   });
 
