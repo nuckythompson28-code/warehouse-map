@@ -2029,23 +2029,40 @@ function buildQtyTop100(){
   qtyTop100 = new Map(sorted.slice(0,100).map(([k,v],i)=>[k,i+1]));
 }
 
-let shipmentHistory = {};
+let shipmentHistory = null; // lazy load
 
 async function loadShipmentData(){
   try{
-    const [res, hRes] = await Promise.all([
-      fetch('shipment_data.json'),
-      fetch('shipment_history.json')
-    ]);
+    // 캐시 확인
+    const cached = localStorage.getItem('shipmentDataCache');
+    const cacheTime = localStorage.getItem('shipmentDataTime');
+    if(cached && cacheTime && Date.now() - Number(cacheTime) < 3600000){
+      shipmentData = JSON.parse(cached);
+      buildQtyTop100();
+      renderAll();
+      return;
+    }
+    const res = await fetch('shipment_data.json');
     if(!res.ok) throw new Error('fetch failed');
     shipmentData = await res.json();
-    if(hRes.ok) shipmentHistory = await hRes.json();
+    localStorage.setItem('shipmentDataCache', JSON.stringify(shipmentData));
+    localStorage.setItem('shipmentDataTime', String(Date.now()));
     buildQtyTop100();
     renderAll();
   }catch(e){
-    console.warn('shipment_data.json 로드 실패, 장기미출고 기능 비활성:', e.message);
+    console.warn('shipment_data.json 로드 실패:', e.message);
     shipmentData = {};
   }
+}
+
+async function loadShipmentHistory(){
+  if(shipmentHistory) return shipmentHistory;
+  try{
+    const res = await fetch('shipment_history.json');
+    if(res.ok) shipmentHistory = await res.json();
+    else shipmentHistory = {};
+  }catch(e){ shipmentHistory = {}; }
+  return shipmentHistory;
 }
 
 /* ── 구글 시트 연동 ── */
@@ -2738,6 +2755,26 @@ function saveSheet(){
 let popupKey=null; // 현재 열린 슬롯의 key
 let popupEditingIdx=null; // 현재 인라인 편집 중인 카드 인덱스 (data 배열의 id)
 
+async function loadHistoryCard(elemId, mat, item){
+  const el = document.getElementById(elemId);
+  if(!el) return;
+  el.innerHTML='<div class="card-history-title">로딩 중...</div>';
+  const hist = await loadShipmentHistory();
+  const hKey = mat+'|'+item;
+  const records = hist[hKey];
+  if(records && records.length){
+    el.innerHTML=`<div class="card-history-title">최근 입출고 이력</div>
+      <table class="card-history-tbl">
+        <tr><th>날짜</th><th>구분</th><th>수량</th><th>업체</th></tr>
+        ${records.map(h=>`<tr class="${h.type==='출고'?'hist-out':'hist-in'}">
+          <td>${h.date}</td><td>${h.type}</td><td>${h.qty.toLocaleString()}</td><td>${h.company||'-'}</td>
+        </tr>`).join('')}
+      </table>`;
+  } else {
+    el.innerHTML='<div class="card-history-title" style="color:var(--muted)">입출고 이력 없음</div>';
+  }
+}
+
 function openSlotPopup(key){
   // 호버 툴팁 숨기기
   document.getElementById('slotTooltip').style.display='none';
@@ -2841,24 +2878,10 @@ function renderPopupCards(){
           else if(si.stale) shipHtml+=`<div class="card-shipment">⚠️ 마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
           else if(si.days>=0) shipHtml+=`<div class="card-shipment">마지막 출고: ${si.lastOut} (${si.days}일 전)</div>`;
           if(si.lastIn) shipHtml+=`<div class="card-shipment">마지막 입고: ${si.lastIn}</div>`;
-          // 입출고 이력 테이블
+          // 입출고 이력 테이블 (lazy load)
           if(d.item && d.material){
-            const hKey = (d.material||'').split(/[(\s]/)[0] + '|' + d.item.toLowerCase();
-            const hist = shipmentHistory[hKey];
-            if(hist && hist.length){
-              shipHtml+=`<div class="card-history">
-                <div class="card-history-title">최근 입출고 이력</div>
-                <table class="card-history-tbl">
-                  <tr><th>날짜</th><th>구분</th><th>수량</th><th>업체</th></tr>
-                  ${hist.map(h=>`<tr class="${h.type==='출고'?'hist-out':'hist-in'}">
-                    <td>${h.date}</td>
-                    <td>${h.type}</td>
-                    <td>${h.qty.toLocaleString()}</td>
-                    <td>${h.company||'-'}</td>
-                  </tr>`).join('')}
-                </table>
-              </div>`;
-            }
+            const histId = 'hist-'+d.id+'-'+idx;
+            shipHtml+=`<div class="card-history" id="${histId}"><div class="card-history-title" style="cursor:pointer" onclick="loadHistoryCard('${histId}','${(d.material||'').split(/[(\s]/)[0]}','${(d.item||'').toLowerCase()}')">📋 입출고 이력 보기</div></div>`;
           }
           return shipHtml;
         })()}
@@ -3874,9 +3897,9 @@ function handleQRParam(){
   }
 }
 loadFromCache(); // 캐시 먼저 보여주고
+loadShipmentData(); // shipment 캐시 적용
 renderAll();     // 즉시 화면 표시
-loadFromSheet().then(()=>loadShipmentData()); // 서버 데이터 로드 후 출고 데이터 로드
-loadShipmentData(); // 캐시 렌더에도 적용되도록 병렬 로드
+loadFromSheet().then(()=>loadShipmentData()); // 서버 데이터 로드 후 갱신
 </script>
 
 <script>
