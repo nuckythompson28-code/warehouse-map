@@ -162,7 +162,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 
 /* ── 전체뷰 ── */
 #panel-full{overflow:hidden;position:relative;height:calc(100vh - 120px);}
-.full-warehouse{padding:12px;min-width:max-content;}
+.full-warehouse{padding:0;min-width:unset;height:100%;}
 
 /* 그룹 지도 개요 - 통합 레이아웃 */
 .wh-map{display:flex;justify-content:center;align-items:stretch;height:100%;padding:0;overflow:hidden}
@@ -927,8 +927,8 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 <!-- 전체뷰 패널 -->
 <div class="panel on" id="panel-full">
   <div id="mapViewport" style="width:100%;height:100%;overflow:hidden;position:relative;">
-    <div id="mapCanvas" style="transform-origin:0 0;will-change:transform;display:inline-block;">
-      <div class="full-warehouse" id="fullWarehouse"></div>
+    <div id="mapCanvas" style="width:100%;height:100%;">
+      <div class="full-warehouse" id="fullWarehouse" style="height:100%"></div>
     </div>
   </div>
 </div>
@@ -3903,11 +3903,13 @@ loadFromSheet().then(()=>loadShipmentData()); // 서버 데이터 로드 후 갱
 </script>
 
 <script>
-/* ── 전체지도 핀치줌 + 드래그 ── */
+/* ── 전체지도 핀치줌 + 드래그 (전체뷰 지도에서는 비활성) ── */
 (function(){
   const viewport = document.getElementById('mapViewport');
   const canvas   = document.getElementById('mapCanvas');
   if(!viewport||!canvas) return;
+  // 전체뷰 지도(overview)에서는 줌/드래그 비활성
+  if(!fullViewGroup) return;
 
   let scale=1, minScale=0.15, maxScale=3;
   let originX=0, originY=0;
