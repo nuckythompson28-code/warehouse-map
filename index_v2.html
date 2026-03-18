@@ -2881,13 +2881,14 @@ function renderPopupCards(){
           // 입출고 이력 테이블 (lazy load)
           if(d.item && d.material){
             const histId = 'hist-'+d.id+'-'+idx;
-            shipHtml+=`<div class="card-history" id="${histId}"><div class="card-history-title" style="cursor:pointer" onclick="loadHistoryCard('${histId}','${(d.material||'').split(/[(\s]/)[0]}','${(d.item||'').toLowerCase()}')">📋 입출고 이력 보기</div></div>`;
+            shipHtml+=`<div class="card-history" id="${histId}"><div class="card-history-title" style="cursor:pointer" onclick="event.stopPropagation();loadHistoryCard('${histId}','${(d.material||'').split(/[(\s]/)[0]}','${d.item||''}')">📋 입출고 이력 보기</div></div>`;
           }
           return shipHtml;
         })()}
       `;
       card.addEventListener('click',e=>{
         if(e.target.classList.contains('card-delete'))return;
+        if(e.target.closest('.card-history'))return;
         e.stopPropagation();
         popupEditingIdx=d.id;
         renderPopupCards();
