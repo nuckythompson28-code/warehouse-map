@@ -171,7 +171,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   grid-template-columns:repeat(12,1fr);
   grid-template-rows:repeat(18,1fr);
   gap:3px;
-  width:100%;max-width:500px;aspect-ratio:12/18;
+  width:100%;max-width:1000px;aspect-ratio:12/18;
 }
 .wh-map-block{
   border-radius:6px;font-size:clamp(11px,3vw,18px);font-weight:800;
@@ -220,6 +220,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 }
 .full-pair{display:flex;flex-direction:column;gap:3px}
 .full-section{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 8px;box-shadow:var(--shadow)}
+.extra-col .full-section{gap:2px;padding:4px 6px}
 .full-sec-hd{
   font-family:'IBM Plex Mono';font-size:11px;font-weight:700;
   color:var(--accent);padding:0 0 6px;display:flex;align-items:center;gap:6px;
@@ -3109,6 +3110,7 @@ function renderFullDetail(groupId, wrap){
     const makeExtraCol=(label, secs)=>{
       const col=document.createElement('div');
       col.style.cssText='display:flex;flex-direction:column;gap:4px;flex-shrink:0;min-width:60px';
+      col.className='extra-col';
       const hd=document.createElement('div');
       hd.style.cssText='font-family:IBM Plex Mono;font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding-bottom:4px';
       hd.textContent=label;
