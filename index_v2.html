@@ -161,17 +161,17 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 
 
 /* ── 전체뷰 ── */
-#panel-full{overflow:hidden;position:relative;height:calc(100vh - 120px);}
+#panel-full{overflow:auto;position:relative;height:calc(100vh - 120px);-webkit-overflow-scrolling:touch;}
 .full-warehouse{padding:0;min-width:unset;height:100%;}
 
 /* 그룹 지도 개요 - 통합 레이아웃 */
-.wh-map{display:flex;justify-content:center;align-items:stretch;height:100%;padding:0;overflow:hidden}
+.wh-map{display:flex;justify-content:center;align-items:stretch;height:100%;padding:0;overflow:auto;-webkit-overflow-scrolling:touch}
 .wh-map-grid{
   display:grid;
-  grid-template-columns:repeat(12,1fr);
-  grid-template-rows:repeat(16,1fr);
+  grid-template-columns:repeat(12,minmax(28px,1fr));
+  grid-template-rows:repeat(16,minmax(28px,1fr));
   gap:2px;
-  width:100%;height:100%;
+  width:100%;height:100%;min-width:340px;
 }
 .wh-map-block{
   border-radius:6px;font-size:clamp(11px,3vw,18px);font-weight:800;
@@ -2809,7 +2809,7 @@ function renderPopupCards(){
     container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted)">아이템 없음</div>';
     return;
   }
-  items.forEach(d=>{
+  items.forEach((d,idx)=>{
     const card=document.createElement('div');
     card.className='popup-card'+(popupEditingIdx===d.id?' editing':'');
     const matColors={'CN10':'#facc15','CN20':'#374151','RS40':'#0d9488','RS20':'#6b7280','CM20':'#d1d5db'};
