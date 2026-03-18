@@ -171,7 +171,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   grid-template-columns:repeat(12,1fr);
   grid-template-rows:repeat(18,1fr);
   gap:3px;
-  width:100%;max-width:1000px;aspect-ratio:12/18;
+  width:100%;max-width:2000px;aspect-ratio:12/18;
 }
 .wh-map-block{
   border-radius:6px;font-size:clamp(11px,3vw,18px);font-weight:800;
@@ -197,7 +197,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 .wh-group-bar span{height:100%;transition:width .3s}
 
 /* 그룹 상세뷰 */
-.wh-detail{padding:12px;}
+.wh-detail{padding:12px;overflow-x:auto;}
 .wh-detail-back{
   font-family:'IBM Plex Mono';font-size:13px;font-weight:700;
   color:var(--accent);cursor:pointer;padding:8px 14px;
@@ -794,12 +794,11 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
   .full-sec-hd { font-size: 11px!important; }
   .full-floor-lbl { font-size: 9px!important; min-width: 20px!important; }
   
-  /* 그룹 카드 모바일 */
-  .wh-groups { padding: 10px!important; gap: 10px!important; }
-  .wh-group-card { padding: 14px 16px!important; }
-  .wh-group-hd { font-size: 15px!important; }
-  .wh-detail { padding: 8px!important; }
+  /* 그룹 상세뷰 모바일 */
+  .wh-detail { padding: 8px!important; overflow-x: auto!important; }
   .wh-placeholder { font-size: 11px!important; }
+  .full-slots { overflow-x: auto!important; -webkit-overflow-scrolling: touch; }
+  .full-section { overflow-x: auto!important; }
   
   /* 테이블 뷰 */
   .wh-table-wrap { padding: 0 4px 80px; }
@@ -3101,7 +3100,7 @@ function renderFullDetail(groupId, wrap){
 
   // 부속 섹션이 있으면 좌우 레이아웃
   const layout=document.createElement('div');
-  layout.style.cssText='display:flex;gap:10px;align-items:flex-start';
+  layout.style.cssText='display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap';
 
   // 부속 섹션 (왼쪽)
   const extraKeys=['extra','extra1','extra2'];
